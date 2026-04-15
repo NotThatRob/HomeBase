@@ -9,6 +9,8 @@ isolated or personally managed environments. Before relying on it for important
 records, deploy with the Docker + Caddy guide, change all production secrets,
 verify backups, and practice a restore.
 
+<img width="1369" height="754" alt="Webpage" src="https://github.com/user-attachments/assets/804720e9-ef1f-4566-89bc-2a1b582564eb" />
+
 ## Contents
 
 - [Project Status](#project-status)
