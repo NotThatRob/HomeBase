@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}{% if log %}Edit Fuel{% else %}Log Fuel{% endif %} - HomeBase{% endblock %}
+
+{% block content %}
+<div class="mb-6 animate-fade-in">
+    <a href="/assets/{{ asset.id }}" class="text-primary hover:underline text-sm font-medium flex items-center gap-1 w-fit group">
+        <span class="material-symbols-outlined text-lg group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+        Back to {{ asset.name }}
+    </a>
+</div>
+
+<div class="mb-6 animate-fade-up">
+    <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">
+        {% if log %}Edit Fuel{% else %}Log Fuel{% endif %}
+    </h1>
+    <p class="text-on-surface-variant">{{ asset.name }}</p>
+</div>
+
+<form method="post"
+      action="{% if log %}/assets/{{ asset.id }}/fuel-logs/{{ log.id }}/edit{% else %}/assets/{{ asset.id }}/fuel-logs{% endif %}"
+      class="max-w-xl space-y-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <input type="hidden" id="fillup_date" name="fillup_date"
+           value="{{ log.fillup_date.isoformat() if log else today.isoformat() }}">
+
+    <section class="bg-surface-container-lowest p-5 sm:p-8 rounded-2xl shadow-sm space-y-5">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">At the Pump</h2>
+
+        <div>
+            <label for="total_cost" class="block text-sm font-medium text-on-surface mb-1">Total Cost *</label>
+            <input type="number" inputmode="decimal" id="total_cost" name="total_cost" step="0.01" min="0" required autofocus
+                   value="{{ log.total_cost if log else '' }}"
+                   placeholder="48.20"
+                   class="fuel-calc w-full text-3xl font-bold bg-surface-container-highest border-none rounded-xl px-4 py-5 focus:ring-2 focus:ring-primary/40 transition-all">
+        </div>
+
+        <div>
+            <label for="gallons" class="block text-sm font-medium text-on-surface mb-1">Gallons</label>
+            <input type="number" inputmode="decimal" id="gallons" name="gallons" step="0.001" min="0"
+                   value="{{ log.gallons if log and log.gallons is not none else '' }}"
+                   placeholder="Optional"
+                   class="fuel-calc w-full text-lg bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:ring-2 focus:ring-primary/40 transition-all">
+        </div>
+
+        <p class="text-xs text-on-surface-variant">That is enough to save the fillup. Add details only when you want MPG tracking.</p>
+    </section>
+
+    <details class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden">
+        <summary class="cursor-pointer list-none p-5 sm:p-6 flex items-center justify-between gap-3">
+            <span>
+                <span class="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">More Details</span>
+                <span class="text-sm text-on-surface-variant">Odometer, price per gallon, station, full tank, notes</span>
+            </span>
+            <span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+        </summary>
+        <div class="px-5 sm:px-8 pb-6 space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="cost_per_gallon" class="block text-sm font-medium text-on-surface mb-1">Price/Gal</label>
+                    <input type="number" inputmode="decimal" id="cost_per_gallon" name="cost_per_gallon" step="0.001" min="0"
+                           value="{{ log.cost_per_gallon if log and log.cost_per_gallon is not none else '' }}"
+                           placeholder="Optional"
+                           class="fuel-calc w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+                </div>
+                <div>
+                    <label for="mileage_at_fillup" class="block text-sm font-medium text-on-surface mb-1">Odometer</label>
+                    <input type="text" inputmode="numeric" pattern="[0-9,]*" id="mileage_at_fillup" name="mileage_at_fillup"
+                           value="{{ log.mileage_at_fillup if log and log.mileage_at_fillup is not none else '' }}"
+                           placeholder="Optional"
+                           class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="station" class="block text-sm font-medium text-on-surface mb-1">Station</label>
+                    <input type="text" id="station" name="station"
+                           value="{{ log.station if log and log.station else '' }}"
+                           placeholder="Optional"
+                           class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+                </div>
+                <div>
+                    <label for="visible_fillup_date" class="block text-sm font-medium text-on-surface mb-1">Date</label>
+                    <input type="date" id="visible_fillup_date"
+                           value="{{ log.fillup_date.isoformat() if log else today.isoformat() }}"
+                           class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+                </div>
+            </div>
+
+            <label class="flex items-center gap-3 cursor-pointer bg-surface-container-highest rounded-xl px-4 py-3">
+                <input type="checkbox" id="full_tank" name="full_tank"
+                       {% if log and log.full_tank %}checked{% endif %}
+                       class="rounded border-outline-variant text-primary focus:ring-primary/40">
+                <span class="text-sm font-medium text-on-surface">Full tank</span>
+            </label>
+
+            <div>
+                <label for="notes" class="block text-sm font-medium text-on-surface mb-1">Notes</label>
+                <textarea id="notes" name="notes" rows="2"
+                          placeholder="Optional"
+                          class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">{{ log.notes if log and log.notes else '' }}</textarea>
+            </div>
+        </div>
+    </details>
+
+    <div class="sticky bottom-0 bg-background/95 backdrop-blur py-3 flex gap-3">
+        <button type="submit"
+                class="flex-1 signature-cta text-on-primary font-bold py-4 px-8 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">local_gas_station</span>
+            Save Fuel
+        </button>
+        <a href="/"
+           class="py-4 px-5 bg-surface-container-high text-on-surface-variant rounded-xl font-semibold hover:bg-surface-container-highest transition-colors text-center">
+            Cancel
+        </a>
+    </div>
+</form>
+
+<script>
+    (function () {
+        var gallons = document.getElementById("gallons");
+        var total = document.getElementById("total_cost");
+        var price = document.getElementById("cost_per_gallon");
+        var visibleDate = document.getElementById("visible_fillup_date");
+        var hiddenDate = document.getElementById("fillup_date");
+
+        function numeric(input) {
+            var value = parseFloat(input.value);
+            return Number.isFinite(value) && value > 0 ? value : null;
+        }
+
+        function calculatePrice() {
+            var gal = numeric(gallons);
+            var tot = numeric(total);
+            if (gal && tot && !numeric(price)) {
+                price.value = (tot / gal).toFixed(3);
+            }
+        }
+
+        [gallons, total].forEach(function (input) {
+            input.addEventListener("input", calculatePrice);
+        });
+        visibleDate.addEventListener("input", function () {
+            hiddenDate.value = visibleDate.value;
+        });
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "wizard/base.html" %}
+
+{% block wizard %}
+<div class="bg-surface-container-lowest rounded-2xl p-10">
+    <div class="text-center mb-8">
+        <span class="material-symbols-outlined text-5xl text-primary mb-2">inventory_2</span>
+        <h1 class="text-3xl font-extrabold text-on-surface tracking-tight font-headline mb-2">
+            Add your first asset
+        </h1>
+        <p class="text-on-surface-variant max-w-md mx-auto">
+            Just the basics &mdash; you can fill in the rest later.
+        </p>
+    </div>
+
+    <form method="post" action="/wizard/asset" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <div>
+            <label for="name" class="block text-sm font-medium text-on-surface mb-1">Name *</label>
+            <input type="text" id="name" name="name" required autofocus
+                   placeholder="e.g. Honda Civic, Kitchen Fridge, MacBook Pro"
+                   class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 focus:bg-surface-container-lowest transition-all">
+        </div>
+
+        <div>
+            <label for="category" class="block text-sm font-medium text-on-surface mb-1">Category *</label>
+            <select id="category" name="category" required
+                    class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 focus:bg-surface-container-lowest transition-all">
+                <option value="">Select category...</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat | replace("_", " ") | title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="make" class="block text-sm font-medium text-on-surface mb-1">Make</label>
+                <input type="text" id="make" name="make"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+            <div>
+                <label for="model_name" class="block text-sm font-medium text-on-surface mb-1">Model</label>
+                <input type="text" id="model_name" name="model_name"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="year" class="block text-sm font-medium text-on-surface mb-1">Year</label>
+                <input type="number" id="year" name="year" min="1900" max="2100"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+            <div>
+                <label for="purchase_price" class="block text-sm font-medium text-on-surface mb-1">Purchase Price</label>
+                <input type="number" id="purchase_price" name="purchase_price" step="0.01" min="0"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+        </div>
+
+        <div>
+            <label for="photo" class="block text-sm font-medium text-on-surface mb-1">Photo (optional)</label>
+            <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"
+                   class="block w-full text-sm text-slate-500
+                          file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0
+                          file:text-sm file:font-semibold file:bg-primary-container file:text-on-primary-container
+                          hover:file:bg-primary-fixed-dim transition-all">
+        </div>
+
+        <div class="flex items-center gap-3 pt-4">
+            <button type="submit"
+                    class="flex-1 signature-cta text-on-primary rounded-xl px-6 py-3 inline-flex items-center justify-center gap-2 font-bold hover:opacity-90 transition-all">
+                Save and continue
+                <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+            <a href="/wizard"
+               class="py-3 px-6 bg-surface-container-high text-on-surface-variant rounded-xl font-semibold hover:bg-surface-container-highest transition-colors">
+                Back
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

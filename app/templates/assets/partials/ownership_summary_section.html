@@ -1,0 +1,96 @@
+<section class="mb-10 animate-fade-up delay-3">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Cost of Ownership</h3>
+            <p class="text-sm text-on-surface-variant mt-1">Actual spend is tracked separately from projected recurring obligations.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Tracked Total</div>
+            <div class="text-3xl font-extrabold font-headline text-primary">{{ ownership_summary.tracked_total | currency }}</div>
+            <p class="text-xs text-on-surface-variant mt-2">Purchase, service, and fuel logged so far.</p>
+        </div>
+        <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Annual Run Rate</div>
+            <div class="text-3xl font-extrabold font-headline text-on-surface">{{ ownership_summary.annual_run_rate | currency }}</div>
+            <p class="text-xs text-on-surface-variant mt-2">Last 12 months plus active recurring costs.</p>
+        </div>
+        <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Monthly Recurring</div>
+            <div class="text-3xl font-extrabold font-headline text-on-surface">{{ ownership_summary.monthly_recurring | currency }}</div>
+            <p class="text-xs text-on-surface-variant mt-2">Current active obligations.</p>
+        </div>
+    </div>
+
+    <div class="bg-surface-container-low rounded-2xl p-5">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div>
+                <div class="text-xs text-on-surface-variant mb-1">Purchase price</div>
+                <div class="font-bold text-on-surface">{{ ownership_summary.purchase_price | currency }}</div>
+            </div>
+            <div>
+                <div class="text-xs text-on-surface-variant mb-1">Service spend</div>
+                <div class="font-bold text-on-surface">{{ ownership_summary.service_total | currency }}</div>
+            </div>
+            {% if asset.category == "vehicle" %}
+            <div>
+                <div class="text-xs text-on-surface-variant mb-1">Fuel spend</div>
+                <div class="font-bold text-on-surface">{{ ownership_summary.fuel_total | currency }}</div>
+            </div>
+            {% endif %}
+            <div>
+                <div class="text-xs text-on-surface-variant mb-1">Annual recurring</div>
+                <div class="font-bold text-on-surface">{{ ownership_summary.annual_recurring | currency }}</div>
+            </div>
+            <div>
+                <div class="text-xs text-on-surface-variant mb-1">Recent service + fuel</div>
+                <div class="font-bold text-on-surface">{{ (ownership_summary.service_last_12_months + ownership_summary.fuel_last_12_months) | currency }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if asset.category == "vehicle" %}
+    <div class="mt-4 bg-surface-container-low rounded-2xl p-5">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+            <div>
+                <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Per-Mile Cost</h4>
+                <p class="text-xs text-on-surface-variant mt-1">Per-mile values appear when there is enough mileage history.</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-surface-container-lowest p-4 rounded-2xl shadow-sm">
+                <div class="text-xs text-on-surface-variant mb-1">Tracked / mile</div>
+                {% if ownership_summary.tracked_cost_per_mile is not none %}
+                <div class="text-2xl font-extrabold font-headline text-primary">{{ ownership_summary.tracked_cost_per_mile | currency }}/mi</div>
+                <p class="text-xs text-on-surface-variant mt-2">Using current odometer.</p>
+                {% else %}
+                <div class="text-2xl font-extrabold font-headline text-on-surface">Not enough data</div>
+                <p class="text-xs text-on-surface-variant mt-2">Add current mileage.</p>
+                {% endif %}
+            </div>
+            <div class="bg-surface-container-lowest p-4 rounded-2xl shadow-sm">
+                <div class="text-xs text-on-surface-variant mb-1">Fuel / mile</div>
+                {% if ownership_summary.fuel_cost_per_mile is not none %}
+                <div class="text-2xl font-extrabold font-headline text-on-surface">{{ ownership_summary.fuel_cost_per_mile | currency }}/mi</div>
+                <p class="text-xs text-on-surface-variant mt-2">{{ "{:,}".format(ownership_summary.observed_fuel_miles) }} observed mi.</p>
+                {% else %}
+                <div class="text-2xl font-extrabold font-headline text-on-surface">Not enough data</div>
+                <p class="text-xs text-on-surface-variant mt-2">Needs two fuel logs with gallons and odometer.</p>
+                {% endif %}
+            </div>
+            <div class="bg-surface-container-lowest p-4 rounded-2xl shadow-sm">
+                <div class="text-xs text-on-surface-variant mb-1">Operating / mile</div>
+                {% if ownership_summary.operating_cost_per_mile is not none %}
+                <div class="text-2xl font-extrabold font-headline text-on-surface">{{ ownership_summary.operating_cost_per_mile | currency }}/mi</div>
+                <p class="text-xs text-on-surface-variant mt-2">{{ "{:,}".format(ownership_summary.estimated_annual_miles | int) }} est. annual mi.</p>
+                {% else %}
+                <div class="text-2xl font-extrabold font-headline text-on-surface">Not enough data</div>
+                <p class="text-xs text-on-surface-variant mt-2">Needs recent mileage history.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</section>

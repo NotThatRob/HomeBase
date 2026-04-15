@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Search - HomeBase{% endblock %}
+
+{% block content %}
+<div class="mb-8 animate-fade-up">
+    <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">Search</h1>
+    {% if results.query %}
+    <p class="text-on-surface-variant">
+        {{ results.total }} result{{ "s" if results.total != 1 else "" }} for
+        <span class="font-semibold text-on-surface">&ldquo;{{ results.query }}&rdquo;</span>
+    </p>
+    {% else %}
+    <p class="text-on-surface-variant">Type at least {{ min_query_len }} characters in the top bar to search across assets, service records, and documents.</p>
+    {% endif %}
+</div>
+
+{% if results.query and results.total == 0 %}
+<div class="bg-surface-container-lowest rounded-2xl p-12 flex flex-col items-center justify-center text-center animate-fade-up delay-1">
+    <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">search_off</span>
+    <p class="text-on-surface-variant">No matches. Try a different term.</p>
+</div>
+{% endif %}
+
+{% if results.assets %}
+<section class="mb-10 animate-fade-up delay-1">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Assets</h2>
+        <span class="text-xs text-on-surface-variant">{{ results.assets | length }}</span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {% for asset in results.assets %}
+        <a href="/assets/{{ asset.id }}"
+           class="bg-surface-container-lowest rounded-2xl p-5 flex items-center gap-4 hover:shadow-md hover:translate-y-[-1px] transition-all group">
+            <span class="material-symbols-outlined text-3xl text-primary">
+                {% if asset.category == "vehicle" %}directions_car
+                {% elif asset.category == "appliance" %}kitchen
+                {% elif asset.category == "home_system" %}home_repair_service
+                {% elif asset.category == "tech" %}devices
+                {% elif asset.category == "furniture" %}chair
+                {% else %}inventory_2{% endif %}
+            </span>
+            <div class="flex-1 min-w-0">
+                <div class="font-bold text-on-surface group-hover:text-primary transition-colors truncate">{{ asset.name }}</div>
+                <div class="text-xs text-on-surface-variant truncate">
+                    {{ asset.category | replace("_", " ") | title }}
+                    {% if asset.make %} &middot; {{ asset.make }}{% endif %}
+                    {% if asset.model_name %} {{ asset.model_name }}{% endif %}
+                </div>
+            </div>
+            <span class="material-symbols-outlined text-lg text-on-surface-variant/50 group-hover:text-primary transition-colors">chevron_right</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if results.records %}
+<section class="mb-10 animate-fade-up delay-2">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Service Records</h2>
+        <span class="text-xs text-on-surface-variant">{{ results.records | length }}</span>
+    </div>
+    <div class="flex flex-col gap-3">
+        {% for record in results.records %}
+        <a href="/assets/{{ record.asset_id }}/service-records/{{ record.id }}"
+           class="bg-surface-container-lowest rounded-2xl p-5 flex items-center justify-between gap-4 hover:shadow-md hover:translate-y-[-1px] transition-all group">
+            <div class="flex-1 min-w-0">
+                <div class="font-bold text-on-surface group-hover:text-primary transition-colors truncate">{{ record.title }}</div>
+                <div class="text-xs text-on-surface-variant truncate">
+                    {{ record.asset.name }}
+                    {% if record.vendor %} &middot; {{ record.vendor }}{% endif %}
+                </div>
+            </div>
+            <div class="flex items-center gap-4 text-sm flex-shrink-0">
+                <span class="font-bold text-primary">{{ record.cost | currency }}</span>
+                <span class="text-on-surface-variant hidden sm:inline">{{ record.service_date | short_date }}</span>
+                <span class="material-symbols-outlined text-lg text-on-surface-variant/50 group-hover:text-primary transition-colors">chevron_right</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if results.documents %}
+<section class="mb-10 animate-fade-up delay-3">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Documents</h2>
+        <span class="text-xs text-on-surface-variant">{{ results.documents | length }}</span>
+    </div>
+    <div class="flex flex-col gap-3">
+        {% for doc in results.documents %}
+        <a href="/documents/{{ doc.id }}"
+           class="bg-surface-container-lowest rounded-2xl p-5 flex items-center gap-4 hover:shadow-md hover:translate-y-[-1px] transition-all group">
+            <span class="material-symbols-outlined text-2xl text-primary">description</span>
+            <div class="flex-1 min-w-0">
+                <div class="font-bold text-on-surface group-hover:text-primary transition-colors truncate">{{ doc.title }}</div>
+                <div class="text-xs text-on-surface-variant truncate">
+                    {{ doc.asset.name }} &middot; {{ doc.doc_type | title }}
+                </div>
+            </div>
+            <span class="material-symbols-outlined text-lg text-on-surface-variant/50 group-hover:text-primary transition-colors">chevron_right</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

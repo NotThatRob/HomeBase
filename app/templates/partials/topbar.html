@@ -1,0 +1,54 @@
+<header class="sticky top-0 z-30 w-full px-4 md:px-6 lg:px-10 py-3 flex justify-between items-center backdrop-blur-xl" style="background-color: var(--color-topbar-surface);">
+    <div class="flex items-center gap-4 flex-1">
+        <!-- Mobile hamburger -->
+        <button onclick="openMobileNav()"
+                class="md:hidden p-1.5 -ml-1 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-2xl">menu</span>
+        </button>
+        <!-- Mobile logo -->
+        <span class="md:hidden text-lg font-black text-primary font-headline tracking-tight">HomeBase</span>
+        <form action="/search" method="get" class="relative max-w-md w-full hidden md:block">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70">search</span>
+            <input type="text"
+                   name="q"
+                   value="{{ request.query_params.get('q', '') if request.url.path == '/search' else '' }}"
+                   class="w-full bg-surface-container-highest border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/40 focus:bg-surface-container-lowest transition-all"
+                   placeholder="Search assets, records, documents...">
+        </form>
+    </div>
+    <div class="flex items-center gap-3">
+        <button type="button"
+                onclick="toggleTheme()"
+                aria-label="Toggle color theme"
+                title="Toggle light / dark"
+                class="relative w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors">
+            <span class="theme-toggle-sun material-symbols-outlined text-xl">light_mode</span>
+            <span class="theme-toggle-moon material-symbols-outlined text-xl">dark_mode</span>
+        </button>
+        {% if request.state.user %}
+        <a href="/fuel-logs/new"
+           aria-label="Log fuel"
+           title="Log fuel"
+           class="relative w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-xl">local_gas_station</span>
+        </a>
+        <span class="text-sm font-medium text-on-surface hidden lg:inline">{{ request.state.user.display_name }}</span>
+        <a href="/logout"
+           class="text-sm text-on-surface-variant hover:text-primary transition-colors">
+            Logout
+        </a>
+        {% endif %}
+    </div>
+</header>
+<form action="/search" method="get" class="md:hidden px-4 pb-3">
+    <label for="mobile-search" class="sr-only">Search HomeBase</label>
+    <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70">search</span>
+        <input type="text"
+               id="mobile-search"
+               name="q"
+               value="{{ request.query_params.get('q', '') if request.url.path == '/search' else '' }}"
+               class="w-full bg-surface-container-highest border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/40 focus:bg-surface-container-lowest transition-all"
+               placeholder="Search assets, records, documents...">
+    </div>
+</form>

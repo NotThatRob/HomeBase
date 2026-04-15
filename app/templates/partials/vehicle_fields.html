@@ -1,0 +1,46 @@
+<section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm space-y-5">
+    <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Vehicle Details</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="vin" class="block text-sm font-medium text-on-surface mb-1">VIN</label>
+            <input type="text" id="vin" name="vin" maxlength="17"
+                   value="{{ asset.vehicle_meta.vin if asset and asset.vehicle_meta and asset.vehicle_meta.vin else '' }}"
+                   class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+        </div>
+        <div>
+            <label for="license_plate" class="block text-sm font-medium text-on-surface mb-1">License Plate</label>
+            <input type="text" id="license_plate" name="license_plate" maxlength="20"
+                   value="{{ asset.vehicle_meta.license_plate if asset and asset.vehicle_meta and asset.vehicle_meta.license_plate else '' }}"
+                   class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="current_mileage" class="block text-sm font-medium text-on-surface mb-1">Current Mileage</label>
+            <input type="text" inputmode="numeric" pattern="[0-9,]*" id="current_mileage" name="current_mileage"
+                   value="{{ asset.vehicle_meta.current_mileage if asset and asset.vehicle_meta and asset.vehicle_meta.current_mileage else '' }}"
+                   class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+        </div>
+        <div>
+            <label for="fuel_type" class="block text-sm font-medium text-on-surface mb-1">Fuel Type</label>
+            <select id="fuel_type" name="fuel_type"
+                    class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+                <option value="">Select...</option>
+                {% set current_fuel = asset.vehicle_meta.fuel_type if asset and asset.vehicle_meta else '' %}
+                {% for ft in ["gasoline", "diesel", "electric", "hybrid", "plug_in_hybrid", "other"] %}
+                <option value="{{ ft }}" {% if current_fuel == ft %}selected{% endif %}>
+                    {{ ft | replace("_", " ") | title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div>
+        <label for="insurance_info" class="block text-sm font-medium text-on-surface mb-1">Insurance Info</label>
+        <textarea id="insurance_info" name="insurance_info" rows="2"
+                  class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">{{ asset.vehicle_meta.insurance_info if asset and asset.vehicle_meta and asset.vehicle_meta.insurance_info else '' }}</textarea>
+    </div>
+</section>

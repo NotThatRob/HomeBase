@@ -1,0 +1,25 @@
+{% extends "wizard/base.html" %}
+
+{% block wizard %}
+<div class="bg-surface-container-lowest rounded-2xl p-10 text-center">
+    <span class="material-symbols-outlined text-6xl text-primary mb-4">waving_hand</span>
+    <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-3">
+        Welcome to HomeBase{% if user and user.display_name %}, {{ user.display_name.split()[0] }}{% endif %}
+    </h1>
+    <p class="text-on-surface-variant max-w-md mx-auto mb-8">
+        HomeBase keeps everything you own &mdash; cars, appliances, tech, furniture &mdash; in one place,
+        so you can answer <em>&ldquo;what do I know about this thing, what has it cost me, and what does it need next?&rdquo;</em> in seconds.
+    </p>
+    <p class="text-on-surface-variant max-w-md mx-auto mb-10">
+        Let&rsquo;s add your first asset to get started. It takes 30 seconds.
+    </p>
+
+    <div class="flex items-center justify-center gap-3">
+        <a href="/wizard/asset"
+           class="signature-cta text-on-primary rounded-xl px-6 py-3 inline-flex items-center gap-2 font-bold hover:opacity-90 transition-all">
+            Add my first asset
+            <span class="material-symbols-outlined">arrow_forward</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

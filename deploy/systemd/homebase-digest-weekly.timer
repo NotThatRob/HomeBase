@@ -1,0 +1,10 @@
+[Unit]
+Description=Check HomeBase weekly maintenance digests every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+Persistent=true
+Unit=homebase-digest-weekly.service
+
+[Install]
+WantedBy=timers.target

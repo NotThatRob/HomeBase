@@ -1,0 +1,31 @@
+{% set _doc_icons = {
+    "manual": "menu_book",
+    "receipt": "receipt_long",
+    "warranty": "verified_user",
+    "invoice": "request_quote",
+    "photo": "image",
+    "email": "mail",
+    "report": "summarize",
+    "other": "description"
+} %}
+<a href="/documents/{{ doc.id }}"
+   class="group flex items-center gap-4 bg-surface-container-lowest rounded-2xl p-5 hover:translate-y-[-1px] hover:shadow-md transition-all duration-200">
+    <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-primary-container/40 flex items-center justify-center">
+        <span class="material-symbols-outlined text-2xl text-primary">
+            {{ _doc_icons.get(doc.doc_type, "description") }}
+        </span>
+    </div>
+    <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-0.5">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70">
+                {{ doc.doc_type }}
+            </span>
+        </div>
+        <h4 class="font-bold text-on-surface group-hover:text-primary transition-colors truncate">{{ doc.title }}</h4>
+        <p class="text-xs text-on-surface-variant truncate">
+            {{ doc.file_name }} &middot;
+            {{ doc.file_size | file_size }}
+        </p>
+    </div>
+    <span class="material-symbols-outlined text-on-surface-variant/50 group-hover:text-primary transition-colors">chevron_right</span>
+</a>

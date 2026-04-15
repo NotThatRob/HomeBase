@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Asset Inventory - HomeBase{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-up">
+    <div>
+        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">Asset Inventory</h1>
+        <p class="text-on-surface-variant max-w-lg">Manage and track your possessions, from vehicles to appliances.</p>
+    </div>
+    <a href="/assets/new"
+       class="inline-flex items-center gap-2 px-6 py-3 bg-surface-container-high text-on-primary-container rounded-xl font-semibold hover:bg-surface-container-highest hover:translate-y-[-1px] hover:shadow-sm transition-all duration-200">
+        <span class="material-symbols-outlined text-xl">add</span>
+        <span>New Asset</span>
+    </a>
+</div>
+
+<!-- Category filter pills -->
+<div class="flex gap-3 overflow-x-auto pb-4 mb-8 animate-fade-up delay-1 scrollbar-hide">
+    <a href="/assets"
+       class="flex-shrink-0 px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:translate-y-[-1px]
+              {% if not selected_category %}bg-primary text-on-primary shadow-sm shadow-primary/20{% else %}bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high{% endif %}">
+        All Assets
+    </a>
+    {% for cat in categories %}
+    <a href="/assets?category={{ cat }}"
+       class="flex-shrink-0 px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:translate-y-[-1px]
+              {% if selected_category == cat %}bg-primary text-on-primary shadow-sm shadow-primary/20{% else %}bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high{% endif %}">
+        {{ cat | replace("_", " ") | title }}
+    </a>
+    {% endfor %}
+</div>
+
+{% if assets %}
+<!-- Asset grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for asset in assets %}
+    <div class="animate-scale-in" style="animation-delay: {{ [loop.index0 * 60, 600] | min }}ms">
+        {% include "partials/asset_card.html" %}
+    </div>
+    {% endfor %}
+
+    <!-- Ghost "New Asset" card -->
+    <div class="animate-scale-in" style="animation-delay: {{ [assets|length * 60, 660] | min }}ms">
+        <a href="/assets/new"
+           class="flex flex-col items-center justify-center bg-surface-container-lowest rounded-2xl border-2 border-dashed border-outline-variant/30 min-h-[280px] hover:border-primary/40 hover:bg-surface-bright hover:translate-y-[-2px] transition-all duration-300 group">
+            <span class="material-symbols-outlined text-5xl text-outline-variant group-hover:text-primary group-hover:scale-110 transition-all duration-300">add_circle</span>
+            <h3 class="text-lg font-bold text-on-surface mt-4 font-headline">New Asset</h3>
+            <p class="text-xs text-on-surface-variant text-center mt-1">Add to your inventory</p>
+        </a>
+    </div>
+</div>
+{% else %}
+<!-- Empty state -->
+<div class="text-center py-20 animate-fade-up delay-2">
+    <div class="w-28 h-28 mx-auto mb-6 rounded-full bg-primary-container/30 flex items-center justify-center">
+        <span class="material-symbols-outlined text-6xl text-primary/40">inventory_2</span>
+    </div>
+    <h2 class="text-2xl font-bold font-headline text-on-surface mb-2">No assets yet</h2>
+    <p class="text-on-surface-variant mb-8 max-w-xs mx-auto">Start building your inventory by adding your first asset.</p>
+    <a href="/assets/new"
+       class="inline-flex items-center gap-2 signature-cta text-on-primary font-bold py-3 px-8 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all">
+        <span class="material-symbols-outlined">add</span>
+        <span>Add Your First Asset</span>
+    </a>
+</div>
+{% endif %}
+{% endblock %}

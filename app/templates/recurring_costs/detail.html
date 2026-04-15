@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cost.name }} - HomeBase{% endblock %}
+
+{% block content %}
+<div class="mb-8 animate-fade-in">
+    <a href="/assets/{{ asset.id }}" class="text-primary hover:underline text-sm font-medium flex items-center gap-1 w-fit group">
+        <span class="material-symbols-outlined text-lg group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+        Back to {{ asset.name }}
+    </a>
+</div>
+
+<div class="flex items-start justify-between mb-8 animate-fade-up">
+    <div>
+        {% set cat_colors = {
+            "insurance": "bg-primary-container text-on-primary-container",
+            "registration": "bg-secondary-container text-on-secondary-container",
+            "fuel": "bg-tertiary-container text-on-tertiary-container",
+            "subscription": "bg-surface-container-high text-on-surface",
+            "tax": "bg-error-container text-on-error-container",
+            "fee": "bg-surface-container-high text-on-surface",
+            "other": "bg-surface-container-high text-on-surface"
+        } %}
+        <div class="flex items-center gap-3 mb-2">
+            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ cat_colors.get(cost.cost_category, cat_colors['other']) }}">
+                {{ cost.cost_category | replace("_", " ") }}
+            </span>
+            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-surface-container-high text-on-surface-variant">
+                {{ cost.frequency | replace("_", " ") }}
+            </span>
+        </div>
+        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline">{{ cost.name }}</h1>
+        <p class="text-on-surface-variant mt-2">
+            Starts {{ cost.start_date | long_date }}
+            {% if cost.end_date %} &middot; Ends {{ cost.end_date | long_date }}{% endif %}
+        </p>
+    </div>
+    <div class="flex gap-2">
+        <a href="/assets/{{ asset.id }}/recurring-costs/{{ cost.id }}/edit"
+           class="py-2.5 px-5 bg-surface-container-high text-primary font-bold rounded-xl text-sm flex items-center gap-2 hover:bg-primary hover:text-on-primary transition-all">
+            <span class="material-symbols-outlined text-lg">edit</span>
+            Edit
+        </a>
+        <form method="post" action="/assets/{{ asset.id }}/recurring-costs/{{ cost.id }}/delete"
+              onsubmit="return confirm('Delete this recurring cost?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <button type="submit"
+                    class="py-2.5 px-5 bg-surface-container-lowest text-error font-bold rounded-xl text-sm flex items-center gap-2 border border-error/10 hover:bg-error hover:text-white transition-all">
+                <span class="material-symbols-outlined text-lg">delete</span>
+                Delete
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 animate-fade-up delay-1">
+    <div class="bg-surface-container-low p-6 rounded-2xl">
+        <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Amount</div>
+        <div class="text-2xl font-bold font-headline text-primary">{{ cost.amount | currency }}</div>
+        <p class="text-xs text-on-surface-variant mt-1">{{ cost.frequency | replace("_", " ") | title }}</p>
+    </div>
+    <div class="bg-surface-container-low p-6 rounded-2xl">
+        <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Monthly</div>
+        <div class="text-2xl font-bold font-headline text-on-surface">{{ monthly_cost | currency }}</div>
+    </div>
+    <div class="bg-surface-container-low p-6 rounded-2xl">
+        <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Annual</div>
+        <div class="text-2xl font-bold font-headline text-on-surface">{{ annual_cost | currency }}</div>
+    </div>
+</div>
+
+{% if cost.notes %}
+<div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm mb-10 animate-fade-up delay-2">
+    <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Notes</h3>
+    <p class="text-on-surface whitespace-pre-wrap">{{ cost.notes }}</p>
+</div>
+{% endif %}
+
+<footer class="pt-4 pb-12 text-center">
+    <p class="text-xs text-slate-400 uppercase tracking-widest">
+        Added {{ cost.created_at | long_date }}
+        {% if cost.created_by %} by {{ cost.created_by.display_name }}{% endif %}
+    </p>
+</footer>
+{% endblock %}

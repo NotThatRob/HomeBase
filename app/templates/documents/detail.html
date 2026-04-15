@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.title }} - HomeBase{% endblock %}
+
+{% block content %}
+{% set is_image = document.mime_type.startswith("image/") %}
+{% set is_pdf = document.mime_type == "application/pdf" %}
+{% set is_text = document.mime_type in ("text/plain", "text/markdown") %}
+
+<!-- Breadcrumb -->
+<div class="mb-8 animate-fade-in">
+    <a href="/assets/{{ asset.id }}" class="text-primary hover:underline text-sm font-medium flex items-center gap-1 w-fit group">
+        <span class="material-symbols-outlined text-lg group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+        Back to {{ asset.name }}
+    </a>
+</div>
+
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-up">
+    <div>
+        <div class="flex items-center gap-3 mb-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary-container text-on-primary-container">
+                {{ document.doc_type }}
+            </span>
+            {% if document.service_record %}
+            <a href="/assets/{{ asset.id }}/service-records/{{ document.service_record.id }}"
+               class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-secondary-container text-on-secondary-container hover:opacity-80 transition-opacity">
+                <span class="material-symbols-outlined text-xs align-middle">build</span>
+                {{ document.service_record.title }}
+            </a>
+            {% endif %}
+        </div>
+        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline">{{ document.title }}</h1>
+        <p class="text-on-surface-variant mt-2 text-sm">
+            {{ document.file_name }} &middot;
+            {{ document.file_size | file_size }}
+            &middot; {{ document.mime_type }}
+        </p>
+    </div>
+    <div class="flex items-center gap-3">
+        <a href="/documents/{{ document.id }}/download"
+           class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 transition-all">
+            <span class="material-symbols-outlined text-lg">download</span>
+            Download
+        </a>
+        <a href="/documents/{{ document.id }}/edit"
+           class="inline-flex items-center gap-2 px-4 py-3 bg-surface-container-high text-on-surface rounded-xl font-bold text-sm hover:bg-surface-container-highest transition-all">
+            <span class="material-symbols-outlined text-lg">edit</span>
+            Edit
+        </a>
+        <form method="post" action="/documents/{{ document.id }}/delete"
+              onsubmit="return confirm('Delete this document? The file will be permanently removed.')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <button type="submit"
+                    class="inline-flex items-center gap-2 px-4 py-3 bg-surface-container-lowest text-error font-bold rounded-xl text-sm border border-error/10 hover:bg-error hover:text-white transition-all">
+                <span class="material-symbols-outlined text-lg">delete</span>
+                Delete
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Preview area -->
+<div class="bg-surface-container-lowest rounded-2xl overflow-hidden mb-10 animate-fade-up delay-1">
+    {% if is_image and inline_previewable %}
+    <div class="flex items-center justify-center bg-surface-container">
+        <img src="/documents/{{ document.id }}/preview" alt="{{ document.title }}"
+             class="max-w-full max-h-[80vh] object-contain">
+    </div>
+    {% elif is_pdf and inline_previewable %}
+    <iframe src="/documents/{{ document.id }}/preview"
+            sandbox="allow-same-origin"
+            referrerpolicy="no-referrer"
+            class="w-full h-[80vh] border-0"
+            title="{{ document.title }}"></iframe>
+    {% elif is_text and inline_previewable %}
+    <div class="p-8">
+        <p class="text-sm text-on-surface-variant mb-4">Text preview not rendered inline. Use the download button to view the full file.</p>
+        <a href="/documents/{{ document.id }}/preview" target="_blank" rel="noopener noreferrer"
+           class="inline-flex items-center gap-2 text-primary text-sm font-bold hover:underline">
+            <span class="material-symbols-outlined text-lg">open_in_new</span>
+            Open in new tab
+        </a>
+    </div>
+    {% else %}
+    <div class="p-12 text-center">
+        <span class="material-symbols-outlined text-6xl text-outline-variant mb-3">description</span>
+        <p class="text-on-surface-variant mb-6">This file type cannot be previewed inline.<br>Use the download button to open it locally.</p>
+        <a href="/documents/{{ document.id }}/download"
+           class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 transition-all">
+            <span class="material-symbols-outlined">download</span>
+            Download File
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Components -->
+{% if document.components %}
+<div class="mb-10 animate-fade-up delay-2">
+    <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Related Components</h3>
+    <div class="flex flex-wrap gap-2">
+        {% for c in document.components %}
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-tertiary-container text-on-tertiary-container">{{ c.name }}</span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Notes -->
+{% if document.notes %}
+<div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm mb-10 animate-fade-up delay-3">
+    <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Notes</h3>
+    <p class="text-on-surface whitespace-pre-wrap">{{ document.notes }}</p>
+</div>
+{% endif %}
+
+<!-- Footer meta -->
+<footer class="pt-4 pb-12 text-center">
+    <p class="text-xs text-slate-400 uppercase tracking-widest">
+        Uploaded {{ document.uploaded_at | long_date }}
+        {% if document.uploaded_by %} by {{ document.uploaded_by.display_name }}{% endif %}
+    </p>
+</footer>
+{% endblock %}

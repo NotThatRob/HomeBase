@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Get started - HomeBase{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-6 animate-fade-up">
+    <!-- Progress bar -->
+    <div class="mb-10">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Step {{ step }} of {{ total_steps }}</span>
+            <form method="post" action="/wizard/complete" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <button type="submit" class="text-xs text-on-surface-variant hover:text-primary transition-colors">
+                    Skip for now
+                </button>
+            </form>
+        </div>
+        <div class="h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-primary transition-all duration-500"
+                 style="width: {{ (step / total_steps * 100) | int }}%"></div>
+        </div>
+    </div>
+
+    {% block wizard %}{% endblock %}
+</div>
+{% endblock %}

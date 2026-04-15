@@ -1,0 +1,60 @@
+<div class="flex items-center gap-3 px-2 mb-8">
+    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-lg shadow-primary/20">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home_storage</span>
+    </div>
+    <div>
+        <div class="text-xl font-black text-primary font-headline tracking-tight">HomeBase</div>
+        <div class="text-[10px] uppercase tracking-wide text-on-surface-variant">Asset Management</div>
+    </div>
+</div>
+
+<nav class="flex flex-col gap-1 flex-1">
+    {% set current_path = request.url.path %}
+
+    <a href="/"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+              {% if current_path == '/' %}text-primary font-bold bg-surface-container-lowest shadow-sm{% else %}text-on-surface-variant font-medium hover:bg-surface-container-high hover:translate-x-0.5{% endif %}">
+        <span class="material-symbols-outlined"
+              {% if current_path == '/' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>space_dashboard</span>
+        <span class="text-xs uppercase tracking-wide">Dashboard</span>
+    </a>
+
+    <a href="/assets"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+              {% if current_path.startswith('/assets') %}text-primary font-bold bg-surface-container-lowest shadow-sm{% else %}text-on-surface-variant font-medium hover:bg-surface-container-high hover:translate-x-0.5{% endif %}">
+        <span class="material-symbols-outlined"
+              {% if current_path.startswith('/assets') %}style="font-variation-settings: 'FILL' 1;"{% endif %}>inventory_2</span>
+        <span class="text-xs uppercase tracking-wide">Inventory</span>
+    </a>
+
+    <a href="/maintenance"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+              {% if current_path.startswith('/maintenance') %}text-primary font-bold bg-surface-container-lowest shadow-sm{% else %}text-on-surface-variant font-medium hover:bg-surface-container-high hover:translate-x-0.5{% endif %}">
+        <span class="material-symbols-outlined"
+              {% if current_path.startswith('/maintenance') %}style="font-variation-settings: 'FILL' 1;"{% endif %}>build_circle</span>
+        <span class="text-xs uppercase tracking-wide">Maintenance</span>
+    </a>
+
+    <a href="/reports"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+              {% if current_path.startswith('/reports') %}text-primary font-bold bg-surface-container-lowest shadow-sm{% else %}text-on-surface-variant font-medium hover:bg-surface-container-high hover:translate-x-0.5{% endif %}">
+        <span class="material-symbols-outlined"
+              {% if current_path.startswith('/reports') %}style="font-variation-settings: 'FILL' 1;"{% endif %}>analytics</span>
+        <span class="text-xs uppercase tracking-wide">Reports</span>
+    </a>
+
+    <a href="/settings"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+              {% if current_path.startswith('/settings') %}text-primary font-bold bg-surface-container-lowest shadow-sm{% else %}text-on-surface-variant font-medium hover:bg-surface-container-high hover:translate-x-0.5{% endif %}">
+        <span class="material-symbols-outlined"
+              {% if current_path.startswith('/settings') %}style="font-variation-settings: 'FILL' 1;"{% endif %}>settings</span>
+        <span class="text-xs uppercase tracking-wide">Settings</span>
+    </a>
+</nav>
+
+<a href="/assets/new"
+   class="mt-auto signature-cta text-on-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all"
+   onclick="if(typeof closeMobileNav==='function')closeMobileNav()">
+    <span class="material-symbols-outlined">add</span>
+    <span class="text-sm font-headline">Add Asset</span>
+</a>

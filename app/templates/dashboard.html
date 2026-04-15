@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - HomeBase{% endblock %}
+
+{% block head %}
+<script src="/static/vendor/chart.umd.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-up">
+    <div>
+        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">
+            Welcome back{% if user and user.display_name %}, {{ user.display_name.split()[0] }}{% endif %}
+        </h1>
+        <p class="text-on-surface-variant max-w-lg">Your household at a glance — spend, recent activity, and quick actions.</p>
+    </div>
+</div>
+
+<!-- Quick actions -->
+<div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-10 animate-fade-up delay-1">
+    <a href="/assets/new"
+       class="signature-cta text-on-primary rounded-xl px-5 py-4 flex items-center justify-between gap-3 shadow-sm shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all">
+        <span class="flex items-center gap-3">
+            <span class="material-symbols-outlined">add</span>
+            <span class="font-semibold font-headline text-sm">Add Asset</span>
+        </span>
+        <span class="material-symbols-outlined text-base opacity-70">arrow_forward</span>
+    </a>
+    <a href="/fuel-logs/new"
+       class="bg-surface-container-low text-on-surface rounded-xl px-5 py-4 flex items-center justify-between gap-3 hover:bg-surface-container-high transition-all">
+        <span class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">local_gas_station</span>
+            <span class="font-semibold font-headline text-sm">Log Fuel</span>
+        </span>
+        <span class="material-symbols-outlined text-base text-on-surface-variant">arrow_forward</span>
+    </a>
+    <a href="/assets"
+       class="bg-surface-container-low text-on-surface rounded-xl px-5 py-4 flex items-center justify-between gap-3 hover:bg-surface-container-high transition-all">
+        <span class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">build_circle</span>
+            <span class="font-semibold font-headline text-sm">Log Service</span>
+        </span>
+        <span class="material-symbols-outlined text-base text-on-surface-variant">arrow_forward</span>
+    </a>
+    <a href="/assets"
+       class="bg-surface-container-low text-on-surface rounded-xl px-5 py-4 flex items-center justify-between gap-3 hover:bg-surface-container-high transition-all">
+        <span class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">event_repeat</span>
+            <span class="font-semibold font-headline text-sm">Add Task</span>
+        </span>
+        <span class="material-symbols-outlined text-base text-on-surface-variant">arrow_forward</span>
+    </a>
+</div>
+
+<!-- Maintenance tasks -->
+{% if overdue_tasks or upcoming_tasks %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+    <div class="bg-surface-container-lowest rounded-2xl p-6 animate-fade-up delay-2">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold font-headline text-on-surface">Due Now</h2>
+            <span class="text-xs text-on-surface-variant">{{ overdue_tasks|length }} item{{ "s" if overdue_tasks|length != 1 else "" }}</span>
+        </div>
+        {% if overdue_tasks %}
+        <div class="space-y-3">
+            {% for task in overdue_tasks %}
+            <div class="rounded-xl bg-surface-container-low p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <a href="/assets/{{ task.asset_id }}" class="flex-1 min-w-0 hover:underline">
+                        <p class="font-bold text-on-surface">{{ task.title }}</p>
+                        <p class="text-sm text-on-surface-variant">{{ task.asset.name }}</p>
+                    </a>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-error-container text-on-error-container whitespace-nowrap">
+                        {{ computed_status(task) }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between gap-3 mt-2">
+                    <p class="text-xs text-on-surface-variant">
+                        {% if task.next_due %}Due {{ task.next_due | short_date }}{% endif %}
+                        {% if task.next_due_usage_value %}{% if task.next_due %} · {% endif %}At {{ "{:,}".format(task.next_due_usage_value) }} {{ task.usage_trigger_label or "units" }}{% endif %}
+                    </p>
+                    {% if user.role == "admin" or user.id == task.asset.created_by_id %}
+                    <form method="post"
+                          action="/assets/{{ task.asset_id }}/maintenance-tasks/{{ task.id }}/quick-complete">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        <button type="submit"
+                                class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">check_circle</span>
+                            Mark Done
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-on-surface-variant">Nothing is due right now.</p>
+        {% endif %}
+    </div>
+
+    <div class="bg-surface-container-lowest rounded-2xl p-6 animate-fade-up delay-3">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold font-headline text-on-surface">Upcoming</h2>
+            <span class="text-xs text-on-surface-variant">Next 30 days</span>
+        </div>
+        {% if upcoming_tasks %}
+        <div class="space-y-3">
+            {% for task in upcoming_tasks %}
+            <div class="rounded-xl bg-surface-container-low p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <a href="/assets/{{ task.asset_id }}" class="flex-1 min-w-0 hover:underline">
+                        <p class="font-bold text-on-surface">{{ task.title }}</p>
+                        <p class="text-sm text-on-surface-variant">{{ task.asset.name }}</p>
+                    </a>
+                    <span class="text-xs font-bold text-primary whitespace-nowrap">
+                        {{ task.next_due | compact_date if task.next_due else "Soon" }}
+                    </span>
+                </div>
+                {% if user.role == "admin" or user.id == task.asset.created_by_id %}
+                <div class="mt-2 flex justify-end">
+                    <form method="post"
+                          action="/assets/{{ task.asset_id }}/maintenance-tasks/{{ task.id }}/quick-complete">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        <button type="submit"
+                                class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">check_circle</span>
+                            Mark Done
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-on-surface-variant">No upcoming tasks in the next 30 days.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Financial overview cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-10">
+    <div class="bg-surface-container-lowest rounded-2xl p-6 animate-fade-up delay-2">
+        <div class="flex items-center gap-2 text-on-surface-variant mb-3">
+            <span class="material-symbols-outlined text-lg">calendar_today</span>
+            <span class="text-xs uppercase tracking-wide font-semibold">This Month</span>
+        </div>
+        <div class="text-3xl font-extrabold font-headline text-on-surface">
+            {{ ownership.month_actual | currency }}
+        </div>
+        <p class="text-xs text-on-surface-variant mt-2">Service and fuel from {{ month_label }}</p>
+    </div>
+    <div class="bg-surface-container-lowest rounded-2xl p-6 animate-fade-up delay-3">
+        <div class="flex items-center gap-2 text-on-surface-variant mb-3">
+            <span class="material-symbols-outlined text-lg">calendar_month</span>
+            <span class="text-xs uppercase tracking-wide font-semibold">This Year</span>
+        </div>
+        <div class="text-3xl font-extrabold font-headline text-on-surface">
+            {{ ownership.year_actual | currency }}
+        </div>
+        <p class="text-xs text-on-surface-variant mt-2">Year-to-date actual spend</p>
+    </div>
+    <div class="bg-surface-container-lowest rounded-2xl p-6 animate-fade-up delay-4">
+        <div class="flex items-center gap-2 text-on-surface-variant mb-3">
+            <span class="material-symbols-outlined text-lg">all_inclusive</span>
+            <span class="text-xs uppercase tracking-wide font-semibold">Tracked Ownership</span>
+        </div>
+        <div class="text-3xl font-extrabold font-headline text-on-surface">
+            {{ ownership.tracked_total | currency }}
+        </div>
+        <p class="text-xs text-on-surface-variant mt-2">Purchase, service, and fuel</p>
+    </div>
+    <div class="bg-surface-container-lowest rounded-2xl p-6 animate-fade-up delay-5">
+        <div class="flex items-center gap-2 text-on-surface-variant mb-3">
+            <span class="material-symbols-outlined text-lg">payments</span>
+            <span class="text-xs uppercase tracking-wide font-semibold">Annual Run Rate</span>
+        </div>
+        <div class="text-3xl font-extrabold font-headline text-on-surface">
+            {{ ownership.annual_run_rate | currency }}
+        </div>
+        <p class="text-xs text-on-surface-variant mt-2">
+            {{ ownership.monthly_recurring | currency }}/mo active recurring
+        </p>
+    </div>
+</div>
+
+<!-- Spend trend -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 mb-10 animate-fade-up delay-5">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-lg font-bold font-headline text-on-surface">12-Month Cost Trend</h2>
+            <p class="text-xs text-on-surface-variant mt-1">Actual service and fuel spend by month.</p>
+        </div>
+    </div>
+    <div class="relative h-72">
+        <canvas id="spendTrend"></canvas>
+    </div>
+</div>
+
+<!-- Charts row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+    <!-- Spend by asset -->
+    <div class="bg-surface-container-lowest rounded-2xl p-6 animate-fade-up delay-5">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-bold font-headline text-on-surface">Top Assets by Ownership Cost</h2>
+            <span class="text-xs text-on-surface-variant">Top 5</span>
+        </div>
+        {% if by_asset %}
+        <div class="relative h-64">
+            <canvas id="spendByAsset"></canvas>
+        </div>
+        {% else %}
+        <div class="flex flex-col items-center justify-center h-64 text-center">
+            <span class="material-symbols-outlined text-4xl text-outline-variant mb-2">bar_chart</span>
+            <p class="text-sm text-on-surface-variant">Add purchase, service, or fuel costs to see ownership totals</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Spend by category -->
+    <div class="bg-surface-container-lowest rounded-2xl p-6 animate-fade-up delay-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-bold font-headline text-on-surface">Spend by Category</h2>
+        </div>
+        {% if by_category %}
+        <div class="relative h-64">
+            <canvas id="spendByCategory"></canvas>
+        </div>
+        {% else %}
+        <div class="flex flex-col items-center justify-center h-64 text-center">
+            <span class="material-symbols-outlined text-4xl text-outline-variant mb-2">donut_large</span>
+            <p class="text-sm text-on-surface-variant">Categories will appear once you log service or fuel spend</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent activity -->
+<div class="bg-surface-container-lowest rounded-2xl p-6 animate-fade-up delay-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold font-headline text-on-surface">Recent Activity</h2>
+        <span class="text-xs text-on-surface-variant">Last {{ activity|length }} item{{ "s" if activity|length != 1 else "" }}</span>
+    </div>
+    {% if activity %}
+    <div class="flex flex-col">
+        {% for item in activity %}
+            {% include "partials/activity_item.html" %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-12 text-center">
+        <span class="material-symbols-outlined text-5xl text-outline-variant mb-3">history</span>
+        <p class="text-sm text-on-surface-variant">Nothing here yet — add an asset to get started.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+(function() {
+    const assetData = {{ by_asset_chart | tojson }};
+    const categoryData = {{ by_category_chart | tojson }};
+    const trendData = {{ spend_trend_chart | tojson }};
+    const styles = getComputedStyle(document.documentElement);
+    const token = (name) => styles.getPropertyValue(name).trim();
+
+    const primary = token("--color-primary");
+    const grid = token("--color-outline-variant");
+    const label = token("--color-on-surface-variant");
+    const chartBorder = token("--color-surface-container-lowest");
+    const palette = [
+        token("--color-primary"),
+        token("--color-tertiary"),
+        token("--color-secondary"),
+        token("--color-error"),
+        token("--color-primary-dim"),
+        token("--color-outline"),
+    ];
+
+    const trendCtx = document.getElementById("spendTrend");
+    new Chart(trendCtx, {
+        type: "line",
+        data: {
+            labels: trendData.labels,
+            datasets: [
+                {
+                    label: "Total",
+                    data: trendData.total,
+                    borderColor: primary,
+                    backgroundColor: primary,
+                    tension: 0.3,
+                    borderWidth: 3,
+                    pointRadius: 3,
+                },
+                {
+                    label: "Service",
+                    data: trendData.service,
+                    borderColor: token("--color-tertiary"),
+                    backgroundColor: token("--color-tertiary"),
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 2,
+                },
+                {
+                    label: "Fuel",
+                    data: trendData.fuel,
+                    borderColor: token("--color-secondary"),
+                    backgroundColor: token("--color-secondary"),
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 2,
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: { color: label, font: { size: 12 }, padding: 16 }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: label, maxRotation: 0 } },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: grid },
+                    ticks: {
+                        color: label,
+                        callback: (v) => "$" + v.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+
+    if (assetData && assetData.labels.length) {
+        const ctx = document.getElementById("spendByAsset");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: assetData.labels,
+                datasets: [{
+                    label: "Total spend",
+                    data: assetData.values,
+                    backgroundColor: primary,
+                    borderRadius: 8,
+                    maxBarThickness: 40,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: label } },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: grid },
+                        ticks: {
+                            color: label,
+                            callback: (v) => "$" + v.toLocaleString()
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (categoryData && categoryData.labels.length) {
+        const ctx = document.getElementById("spendByCategory");
+        new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: categoryData.labels,
+                datasets: [{
+                    data: categoryData.values,
+                    backgroundColor: palette.slice(0, categoryData.labels.length),
+                    borderWidth: 2,
+                    borderColor: chartBorder,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "62%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { color: label, font: { size: 12 }, padding: 16 }
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

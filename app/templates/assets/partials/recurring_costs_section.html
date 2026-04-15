@@ -1,0 +1,86 @@
+{#
+  Recurring costs section partial.
+
+  Expected context:
+    asset               — Asset object
+    recurring_costs     — iterable of RecurringCost (already sliced or full)
+    recurring_summary   — dict with count, monthly_obligation, annual_obligation
+    show_view_all       — bool; render "View All" button when True
+#}
+<div id="recurring-costs-section" class="mb-10 animate-fade-up delay-5">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Recurring Costs</h3>
+        {% if asset.status != "retired" %}
+        <a href="/assets/{{ asset.id }}/recurring-costs/new"
+           class="px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-lg">add_card</span>
+            Add Cost
+        </a>
+        {% endif %}
+    </div>
+
+    {% if recurring_summary.count > 0 %}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-surface-container-low p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Active Costs</div>
+            <div class="text-xl font-bold font-headline text-on-surface">{{ recurring_summary.count }}</div>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Monthly</div>
+            <div class="text-xl font-bold font-headline text-primary">{{ recurring_summary.monthly_obligation | currency }}</div>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Annual</div>
+            <div class="text-xl font-bold font-headline text-primary">{{ recurring_summary.annual_obligation | currency }}</div>
+        </div>
+    </div>
+
+    <div class="space-y-3">
+        {% set cat_colors = {
+            "insurance": "bg-primary-container text-on-primary-container",
+            "registration": "bg-secondary-container text-on-secondary-container",
+            "fuel": "bg-tertiary-container text-on-tertiary-container",
+            "subscription": "bg-surface-container-high text-on-surface",
+            "tax": "bg-error-container text-on-error-container",
+            "fee": "bg-surface-container-high text-on-surface",
+            "other": "bg-surface-container-high text-on-surface"
+        } %}
+        {% for cost in recurring_costs %}
+        <a href="/assets/{{ asset.id }}/recurring-costs/{{ cost.id }}"
+           class="block bg-surface-container-lowest p-5 rounded-2xl hover:shadow-md hover:translate-y-[-1px] transition-all duration-200 group">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ cat_colors.get(cost.cost_category, cat_colors['other']) }}">
+                        {{ cost.cost_category | replace("_", " ") }}
+                    </span>
+                    <span class="font-bold text-on-surface group-hover:text-primary transition-colors truncate">{{ cost.name }}</span>
+                </div>
+                <div class="flex items-center gap-4 text-sm">
+                    <span class="font-bold text-primary">{{ cost.amount | currency }} / {{ cost.frequency | replace("_", " ") }}</span>
+                    <span class="text-on-surface-variant">{{ cost.start_date | short_date }}{% if cost.end_date %} - {{ cost.end_date | short_date }}{% endif %}</span>
+                    <span class="material-symbols-outlined text-lg text-on-surface-variant/50 group-hover:text-primary transition-colors">chevron_right</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if show_view_all %}
+    <div class="mt-4 flex justify-center">
+        <button type="button"
+                hx-get="/assets/{{ asset.id }}/partials/recurring-costs"
+                hx-target="#recurring-costs-section"
+                hx-swap="outerHTML"
+                class="px-5 py-2.5 bg-surface-container-high text-primary font-bold rounded-xl text-sm flex items-center gap-2 hover:bg-primary hover:text-on-primary transition-all">
+            View all {{ asset.recurring_costs | length }}
+            <span class="material-symbols-outlined text-lg">expand_more</span>
+        </button>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="bg-surface-container-lowest p-8 rounded-2xl text-center">
+        <span class="material-symbols-outlined text-5xl text-outline-variant mb-3">payments</span>
+        <p class="text-on-surface-variant">No recurring costs yet. Add insurance, registration, subscriptions, or other predictable expenses.</p>
+    </div>
+    {% endif %}
+</div>

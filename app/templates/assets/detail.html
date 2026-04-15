@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+
+{% block title %}{{ asset.name }} - HomeBase{% endblock %}
+
+{% block head %}
+<script src="/static/vendor/chart.umd.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="mb-8 animate-fade-in">
+    <a href="/assets" class="text-primary hover:underline text-sm font-medium flex items-center gap-1 w-fit group">
+        <span class="material-symbols-outlined text-lg group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+        Back to Inventory
+    </a>
+</div>
+
+<!-- Hero section -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-10">
+    <!-- Photo -->
+    <div class="lg:col-span-7 relative group animate-fade-up">
+        {% if asset.photo %}
+        <div class="rounded-2xl overflow-hidden bg-surface-container aspect-[16/9] shadow-xl">
+            <img src="/assets/{{ asset.id }}/photo" alt="{{ asset.name }}"
+                 onerror="this.style.display='none';var p=this.parentElement;p.classList.add('flex','items-center','justify-center');var s=document.createElement('span');s.className='material-symbols-outlined text-8xl text-outline-variant';s.textContent='inventory_2';p.appendChild(s)"
+                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+        </div>
+        {% else %}
+        <div class="rounded-2xl overflow-hidden bg-surface-container-low aspect-[16/9] flex items-center justify-center">
+            <span class="material-symbols-outlined text-8xl text-outline-variant">
+                {% if asset.category == "vehicle" %}directions_car
+                {% elif asset.category == "appliance" %}kitchen
+                {% elif asset.category == "home_system" %}home_repair_service
+                {% elif asset.category == "tech" %}devices
+                {% elif asset.category == "furniture" %}chair
+                {% else %}inventory_2{% endif %}
+            </span>
+        </div>
+        {% endif %}
+        {% if asset.status == "retired" %}
+        <div class="absolute top-4 left-4 bg-slate-700/90 backdrop-blur-md px-4 py-2 rounded-xl flex items-center gap-2">
+            <span class="material-symbols-outlined text-white text-sm">archive</span>
+            <span class="text-xs font-bold text-white uppercase tracking-widest">Retired</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Title + quick stats -->
+    <div class="lg:col-span-5 space-y-6 flex flex-col justify-center animate-fade-up delay-1">
+        <div>
+            <div class="text-sm font-bold text-primary mb-1 uppercase tracking-widest">
+                {{ asset.category | replace("_", " ") }}
+            </div>
+            <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline">{{ asset.name }}</h1>
+            <p class="text-on-surface-variant mt-2 text-lg">
+                {% if asset.make %}{{ asset.make }}{% endif %}
+                {% if asset.model_name %} {{ asset.model_name }}{% endif %}
+                {% if asset.year %} &middot; {{ asset.year }}{% endif %}
+                {% if asset.location %} &middot; {{ asset.location }}{% endif %}
+            </p>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="grid grid-cols-2 gap-4">
+            {% if asset.purchase_price is not none %}
+            <div class="bg-surface-container-low p-5 rounded-2xl space-y-1">
+                <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Purchase Price</div>
+                <div class="text-2xl font-bold font-headline text-primary">{{ asset.purchase_price | currency }}</div>
+                {% if asset.purchase_vendor %}
+                <div class="text-xs text-slate-500">{{ asset.purchase_vendor }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if asset.category == "vehicle" and asset.vehicle_meta and asset.vehicle_meta.current_mileage is not none %}
+            <div class="bg-surface-container-low p-5 rounded-2xl space-y-1">
+                <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Current Mileage</div>
+                <div class="text-2xl font-bold font-headline text-primary">{{ "{:,}".format(asset.vehicle_meta.current_mileage) }} <span class="text-sm font-medium text-slate-400">mi</span></div>
+            </div>
+            {% endif %}
+
+            {% if asset.purchase_date %}
+            <div class="bg-surface-container-low p-5 rounded-2xl space-y-1">
+                <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Purchase Date</div>
+                <div class="text-lg font-bold font-headline text-on-surface">{{ asset.purchase_date | short_date }}</div>
+            </div>
+            {% endif %}
+
+            {% if asset.serial_number %}
+            <div class="bg-surface-container-low p-5 rounded-2xl space-y-1">
+                <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Serial Number</div>
+                <div class="text-sm font-bold font-mono text-on-surface uppercase">{{ asset.serial_number }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex items-center gap-3">
+            <a href="/assets/{{ asset.id }}/edit"
+               class="flex-1 py-3 bg-surface-container-high text-primary font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-on-primary transition-all">
+                <span class="material-symbols-outlined text-lg">edit</span>
+                Edit Asset
+            </a>
+            {% if asset.category == "vehicle" and asset.status != "retired" %}
+            <a href="/assets/{{ asset.id }}/fuel-logs/new"
+               class="flex-1 py-3 bg-primary text-on-primary font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+                <span class="material-symbols-outlined text-lg">local_gas_station</span>
+                Log Fuel
+            </a>
+            {% endif %}
+            {% if asset.status != "retired" %}
+            <form method="post" action="/assets/{{ asset.id }}/delete"
+                  onsubmit="return confirm('Retire this asset? It will be hidden from the default inventory view.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <button type="submit"
+                        class="py-3 px-5 bg-surface-container-lowest text-error font-bold rounded-xl text-sm flex items-center justify-center gap-2 border border-error/10 hover:bg-error hover:text-white transition-all">
+                    <span class="material-symbols-outlined text-lg">archive</span>
+                    Retire
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Detail cards bento grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10 animate-fade-up delay-2">
+    {% if asset.warranty_expiration %}
+    <div class="bg-surface-container-highest p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden">
+        <div>
+            <div class="flex items-center gap-2 mb-3">
+                <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Warranty</h3>
+                {% if asset.warranty_expiration < today %}
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-error-container text-on-error-container">Expired</span>
+                {% else %}
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-secondary-container text-on-secondary-container">Active</span>
+                {% endif %}
+            </div>
+            <div class="text-xl font-bold font-headline text-on-surface">
+                {{ asset.warranty_expiration | long_date }}
+            </div>
+            {% if asset.warranty_notes %}
+            <p class="text-sm text-slate-600 mt-2">{{ asset.warranty_notes }}</p>
+            {% endif %}
+        </div>
+        <span class="material-symbols-outlined absolute -right-3 -bottom-3 text-7xl text-on-surface/5 rotate-12">verified_user</span>
+    </div>
+    {% endif %}
+
+    {% if asset.location %}
+    <div class="bg-surface-container-low p-6 rounded-2xl">
+        <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Location</h3>
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">location_on</span>
+            <span class="text-lg font-bold font-headline text-on-surface">{{ asset.location }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if asset.status == "retired" and asset.retired_date %}
+    <div class="bg-slate-100 p-6 rounded-2xl">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Retired</h3>
+        <div class="text-lg font-bold font-headline text-slate-700">{{ asset.retired_date | long_date }}</div>
+        {% if asset.retired_reason %}
+        <p class="text-sm text-slate-500 mt-2">{{ asset.retired_reason }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+{% include "assets/partials/ownership_summary_section.html" %}
+
+<!-- Cost trends -->
+<section class="mb-10 animate-fade-up delay-3">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Cost Trends</h3>
+            <p class="text-sm text-on-surface-variant mt-1">
+                Actual spend by month, with purchase and recurring obligations separated.
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-6">
+                <h4 class="text-lg font-bold font-headline text-on-surface">12-Month Spend</h4>
+                <span class="text-xs text-on-surface-variant">Service{% if include_fuel_charts %} + fuel{% endif %}</span>
+            </div>
+            <div class="relative h-72">
+                <canvas id="assetSpendTrend"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-6">
+                <h4 class="text-lg font-bold font-headline text-on-surface">Cost Composition</h4>
+            </div>
+            {% if asset_cost_composition_chart.labels %}
+            <div class="relative h-72">
+                <canvas id="assetCostComposition"></canvas>
+            </div>
+            {% else %}
+            <div class="flex flex-col items-center justify-center h-72 text-center">
+                <span class="material-symbols-outlined text-4xl text-outline-variant mb-2">donut_large</span>
+                <p class="text-sm text-on-surface-variant">Add purchase, service, fuel, or recurring costs to see the mix.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Vehicle details -->
+{% if asset.category == "vehicle" and asset.vehicle_meta %}
+<div class="bg-surface-container-low p-8 rounded-2xl mb-10 animate-fade-up delay-3">
+    <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-6">Vehicle Specifications</h3>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
+        {% if asset.vehicle_meta.vin %}
+        <div>
+            <p class="text-xs text-slate-500 mb-1">VIN Number</p>
+            <p class="font-bold font-headline tracking-tight uppercase">{{ asset.vehicle_meta.vin }}</p>
+        </div>
+        {% endif %}
+        {% if asset.vehicle_meta.license_plate %}
+        <div>
+            <p class="text-xs text-slate-500 mb-1">License Plate</p>
+            <p class="font-bold font-headline tracking-tight">{{ asset.vehicle_meta.license_plate }}</p>
+        </div>
+        {% endif %}
+        {% if asset.vehicle_meta.current_mileage is not none %}
+        <div>
+            <p class="text-xs text-slate-500 mb-1">Current Mileage</p>
+            <p class="font-bold font-headline tracking-tight">{{ "{:,}".format(asset.vehicle_meta.current_mileage) }} mi</p>
+        </div>
+        {% endif %}
+        {% if asset.vehicle_meta.fuel_type %}
+        <div>
+            <p class="text-xs text-slate-500 mb-1">Fuel Type</p>
+            <p class="font-bold font-headline tracking-tight">{{ asset.vehicle_meta.fuel_type | replace("_", " ") | title }}</p>
+        </div>
+        {% endif %}
+        {% if asset.vehicle_meta.insurance_info %}
+        <div class="col-span-2">
+            <p class="text-xs text-slate-500 mb-1">Insurance Info</p>
+            <p class="font-bold font-headline tracking-tight">{{ asset.vehicle_meta.insurance_info }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if asset.category == "vehicle" %}
+{% with show_view_all = fuel_logs_show_view_all %}
+{% include "assets/partials/fuel_logs_section.html" %}
+{% endwith %}
+{% endif %}
+
+<!-- Components -->
+{% include "partials/components_list.html" %}
+
+<!-- Documents -->
+{% with show_view_all = documents_show_view_all %}
+{% include "assets/partials/documents_section.html" %}
+{% endwith %}
+
+<!-- Service History -->
+{% with show_view_all = records_show_view_all %}
+{% include "assets/partials/service_history_section.html" %}
+{% endwith %}
+
+<!-- Recurring Costs -->
+{% with show_view_all = recurring_costs_show_view_all %}
+{% include "assets/partials/recurring_costs_section.html" %}
+{% endwith %}
+
+<!-- Maintenance Tasks -->
+{% include "assets/partials/maintenance_tasks_section.html" %}
+
+<!-- Notes -->
+{% if asset.notes %}
+<div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm mb-10">
+    <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Notes</h3>
+    <p class="text-on-surface whitespace-pre-wrap">{{ asset.notes }}</p>
+</div>
+{% endif %}
+
+<!-- Footer meta -->
+<footer class="pt-4 pb-12 text-center">
+    <p class="text-xs text-slate-400 uppercase tracking-widest">
+        Added {{ asset.created_at | long_date }}
+        {% if asset.created_by %} by {{ asset.created_by.display_name }}{% endif %}
+    </p>
+</footer>
+<script>
+(function() {
+    const trendData = {{ asset_spend_trend_chart | tojson }};
+    const compositionData = {{ asset_cost_composition_chart | tojson }};
+    const styles = getComputedStyle(document.documentElement);
+    const token = (name) => styles.getPropertyValue(name).trim();
+
+    const primary = token("--color-primary");
+    const grid = token("--color-outline-variant");
+    const label = token("--color-on-surface-variant");
+    const chartBorder = token("--color-surface-container-lowest");
+    const palette = [
+        token("--color-primary"),
+        token("--color-tertiary"),
+        token("--color-secondary"),
+        token("--color-error"),
+        token("--color-primary-dim"),
+        token("--color-outline"),
+    ];
+
+    const trendDatasets = [
+        {
+            label: "Total",
+            data: trendData.total,
+            borderColor: primary,
+            backgroundColor: primary,
+            tension: 0.3,
+            borderWidth: 3,
+            pointRadius: 3,
+        },
+        {
+            label: "Service",
+            data: trendData.service,
+            borderColor: token("--color-tertiary"),
+            backgroundColor: token("--color-tertiary"),
+            tension: 0.3,
+            borderWidth: 2,
+            pointRadius: 2,
+        },
+    ];
+    if (Object.prototype.hasOwnProperty.call(trendData, "fuel")) {
+        trendDatasets.push({
+            label: "Fuel",
+            data: trendData.fuel,
+            borderColor: token("--color-secondary"),
+            backgroundColor: token("--color-secondary"),
+            tension: 0.3,
+            borderWidth: 2,
+            pointRadius: 2,
+        });
+    }
+
+    new Chart(document.getElementById("assetSpendTrend"), {
+        type: "line",
+        data: {
+            labels: trendData.labels,
+            datasets: trendDatasets,
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: { color: label, font: { size: 12 }, padding: 16 }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: label, maxRotation: 0 } },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: grid },
+                    ticks: {
+                        color: label,
+                        callback: (v) => "$" + v.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+
+    if (compositionData && compositionData.labels.length) {
+        new Chart(document.getElementById("assetCostComposition"), {
+            type: "doughnut",
+            data: {
+                labels: compositionData.labels,
+                datasets: [{
+                    data: compositionData.values,
+                    backgroundColor: palette.slice(0, compositionData.labels.length),
+                    borderWidth: 2,
+                    borderColor: chartBorder,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "62%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { color: label, font: { size: 12 }, padding: 16 }
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

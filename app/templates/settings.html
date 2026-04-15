@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - HomeBase{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl space-y-10">
+    <div class="animate-fade-up">
+        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">Settings</h1>
+        <p class="text-on-surface-variant">Manage your account and household access.</p>
+    </div>
+
+    <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm animate-fade-up delay-1">
+        <h2 class="text-lg font-bold font-headline text-on-surface mb-1">Profile</h2>
+        <p class="text-sm text-on-surface-variant mb-5">Update the name and email shown around HomeBase.</p>
+
+        {% if profile_error %}
+        <div class="mb-4 rounded-xl bg-error-container text-on-error-container px-4 py-3 text-sm font-medium">{{ profile_error }}</div>
+        {% endif %}
+        {% if profile_success %}
+        <div class="mb-4 rounded-xl bg-primary-container text-on-primary-container px-4 py-3 text-sm font-medium">{{ profile_success }}</div>
+        {% endif %}
+
+        <form method="post" action="/settings/profile" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Display Name</span>
+                <input type="text" name="display_name" value="{{ user.display_name }}" required
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Email</span>
+                <input type="email" name="email" value="{{ user.email }}" required
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <div class="md:col-span-2">
+                <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
+                    Save Profile
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm animate-fade-up delay-2">
+        <h2 class="text-lg font-bold font-headline text-on-surface mb-1">Password</h2>
+        <p class="text-sm text-on-surface-variant mb-5">Change your password and invalidate old sessions.</p>
+
+        {% if request.query_params.get("password_changed") %}
+        <div class="mb-4 rounded-xl bg-primary-container text-on-primary-container px-4 py-3 text-sm font-medium">Password updated.</div>
+        {% endif %}
+        {% if password_error %}
+        <div class="mb-4 rounded-xl bg-error-container text-on-error-container px-4 py-3 text-sm font-medium">{{ password_error }}</div>
+        {% endif %}
+
+        <form method="post" action="/settings/password" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Current Password</span>
+                <input type="password" name="current_password" required
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">New Password</span>
+                <input type="password" name="new_password" required minlength="8"
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Confirm Password</span>
+                <input type="password" name="confirm_password" required minlength="8"
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <div class="md:col-span-3">
+                <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
+                    Change Password
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm animate-fade-up delay-3">
+        <h2 class="text-lg font-bold font-headline text-on-surface mb-1">Notifications</h2>
+        <p class="text-sm text-on-surface-variant mb-5">
+            Choose when HomeBase should email maintenance digests.
+            {% if not email_configured %}
+            Email delivery is not configured yet, so saved preferences will not send mail.
+            {% endif %}
+        </p>
+
+        {% if notification_error %}
+        <div class="mb-4 rounded-xl bg-error-container text-on-error-container px-4 py-3 text-sm font-medium">{{ notification_error }}</div>
+        {% endif %}
+        {% if notification_success %}
+        <div class="mb-4 rounded-xl bg-primary-container text-on-primary-container px-4 py-3 text-sm font-medium">{{ notification_success }}</div>
+        {% endif %}
+
+        <form method="post" action="/settings/notifications" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <label class="md:col-span-3 flex items-center gap-3">
+                <input type="checkbox" name="email_digest_enabled"
+                       {% if user.email_digest_enabled %}checked{% endif %}
+                       class="rounded border-outline-variant text-primary focus:ring-primary/40">
+                <span class="text-sm font-semibold text-on-surface">Send maintenance digest emails</span>
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Frequency</span>
+                <select name="email_digest_frequency"
+                        class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                    {% for frequency in digest_frequencies %}
+                    <option value="{{ frequency }}" {% if user.email_digest_frequency == frequency %}selected{% endif %}>
+                        {{ frequency | title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Preferred Time</span>
+                <input type="time" name="email_digest_time" value="{{ user.email_digest_time }}"
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <div class="md:col-span-3">
+                <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
+                    Save Notifications
+                </button>
+            </div>
+        </form>
+
+        {% if digest_test_error %}
+        <div class="mt-4 rounded-xl bg-error-container text-on-error-container px-4 py-3 text-sm font-medium">{{ digest_test_error }}</div>
+        {% endif %}
+        {% if digest_test_success %}
+        <div class="mt-4 rounded-xl bg-primary-container text-on-primary-container px-4 py-3 text-sm font-medium">{{ digest_test_success }}</div>
+        {% endif %}
+
+        <form method="post" action="/settings/digest-test" class="mt-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <button type="submit"
+                    class="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+                <span class="material-symbols-outlined text-base">outgoing_mail</span>
+                Send a test digest to my inbox
+            </button>
+            <p class="mt-1 text-xs text-on-surface-variant">
+                Sends a digest of your current overdue and upcoming tasks to {{ user.email }}.
+            </p>
+        </form>
+    </section>
+
+    {% if user.role == "admin" %}
+    <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm animate-fade-up delay-3">
+        <h2 class="text-lg font-bold font-headline text-on-surface mb-1">Household Users</h2>
+        <p class="text-sm text-on-surface-variant mb-5">Manage access for people who share this HomeBase.</p>
+
+        {% if admin_error %}
+        <div class="mb-4 rounded-xl bg-error-container text-on-error-container px-4 py-3 text-sm font-medium">{{ admin_error }}</div>
+        {% endif %}
+        {% if admin_success %}
+        <div class="mb-4 rounded-xl bg-primary-container text-on-primary-container px-4 py-3 text-sm font-medium">{{ admin_success }}</div>
+        {% endif %}
+
+        <div class="space-y-5 mb-8">
+            {% for managed_user in users %}
+            <div class="border border-outline-variant rounded-xl p-4">
+                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="font-bold text-on-surface">{{ managed_user.display_name }}</h3>
+                            <span class="text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-surface-container-highest text-on-surface-variant">
+                                {{ managed_user.role | title }}
+                            </span>
+                            {% if managed_user.is_active %}
+                            <span class="text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-primary-container text-on-primary-container">
+                                Active
+                            </span>
+                            {% else %}
+                            <span class="text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-error-container text-on-error-container">
+                                Disabled
+                            </span>
+                            {% endif %}
+                        </div>
+                        <p class="text-sm text-on-surface-variant mt-1">
+                            {{ managed_user.username }} · {{ managed_user.email }}
+                        </p>
+                        <p class="text-xs text-on-surface-variant mt-1">
+                            Created {{ managed_user.created_at | short_date }}
+                            {% if managed_user.last_login %}
+                            · Last login {{ managed_user.last_login | short_date }}
+                            {% else %}
+                            · Never logged in
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <form method="post" action="/settings/users/{{ managed_user.id }}/status">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        {% if managed_user.is_active %}
+                        <input type="hidden" name="action" value="disable">
+                        <button type="submit"
+                                {% if managed_user.id == user.id %}disabled{% endif %}
+                                class="text-sm font-semibold text-error hover:underline disabled:text-on-surface-variant disabled:no-underline disabled:cursor-not-allowed">
+                            Disable
+                        </button>
+                        {% else %}
+                        <input type="hidden" name="action" value="reactivate">
+                        <button type="submit"
+                                {% if managed_user.id == user.id %}disabled{% endif %}
+                                class="text-sm font-semibold text-primary hover:underline disabled:text-on-surface-variant disabled:no-underline disabled:cursor-not-allowed">
+                            Reactivate
+                        </button>
+                        {% endif %}
+                    </form>
+                </div>
+
+                <form method="post" action="/settings/users/{{ managed_user.id }}/edit" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <label class="block">
+                        <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Display Name</span>
+                        <input type="text" name="display_name" value="{{ managed_user.display_name }}" required
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                    </label>
+                    <label class="block">
+                        <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Email</span>
+                        <input type="email" name="email" value="{{ managed_user.email }}" required
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                    </label>
+                    <label class="block">
+                        <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Role</span>
+                        {% if managed_user.id == user.id %}
+                        <input type="hidden" name="role" value="{{ managed_user.role }}">
+                        <input type="text" value="{{ managed_user.role | title }}" disabled
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm text-on-surface-variant">
+                        {% else %}
+                        <select name="role"
+                                class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                            {% for role in roles %}
+                            <option value="{{ role }}" {% if managed_user.role == role %}selected{% endif %}>{{ role | title }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                    </label>
+                    <div class="flex items-end">
+                        <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
+                            Save User
+                        </button>
+                    </div>
+                </form>
+
+                <form method="post" action="/settings/users/{{ managed_user.id }}/password" class="mt-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <label class="block">
+                        <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Temporary Password</span>
+                        <input type="password" name="password" required minlength="8"
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                    </label>
+                    <div class="flex items-end">
+                        <button type="submit" class="text-sm font-semibold text-primary hover:underline py-3">
+                            Reset Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h3 class="text-base font-bold font-headline text-on-surface mb-1">Create User</h3>
+        <p class="text-sm text-on-surface-variant mb-5">Create a new account with a temporary password.</p>
+
+        <form method="post" action="/settings/users" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Username</span>
+                <input type="text" name="username" required
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Display Name</span>
+                <input type="text" name="display_name" required
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Email</span>
+                <input type="email" name="email" required
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Role</span>
+                <select name="role"
+                        class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                    {% for role in roles %}
+                    <option value="{{ role }}" {% if role == "user" %}selected{% endif %}>{{ role | title }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="block md:col-span-2">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Temporary Password</span>
+                <input type="password" name="password" required minlength="8"
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+            </label>
+            <div class="md:col-span-2">
+                <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
+                    Create User
+                </button>
+            </div>
+        </form>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

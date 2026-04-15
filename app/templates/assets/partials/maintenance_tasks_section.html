@@ -1,0 +1,84 @@
+<div id="maintenance-tasks-section" class="mb-10 animate-fade-up delay-6">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Maintenance</h3>
+        {% if asset.status != "retired" %}
+        <a href="/assets/{{ asset.id }}/maintenance-tasks/new"
+           class="px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-lg">event_repeat</span>
+            Add Task
+        </a>
+        {% endif %}
+    </div>
+
+    {% if active_component %}
+    <div class="mb-4 flex items-center gap-2 text-sm">
+        <span class="inline-flex items-center gap-1.5 bg-primary-container text-on-primary-container rounded-full px-3 py-1 font-medium">
+            <span class="material-symbols-outlined text-sm">filter_alt</span>
+            Filtered by {{ active_component.name }}
+        </span>
+        <a href="/assets/{{ asset.id }}" class="text-xs text-on-surface-variant hover:text-primary">Clear</a>
+    </div>
+    {% endif %}
+
+    {% if maintenance_tasks %}
+    <div class="space-y-3">
+        {% set status_colors = {
+            "overdue": "bg-error-container text-on-error-container",
+            "due": "bg-error-container text-on-error-container",
+            "upcoming": "bg-secondary-container text-on-secondary-container",
+            "paused": "bg-surface-container-high text-on-surface-variant",
+            "completed": "bg-tertiary-container text-on-tertiary-container"
+        } %}
+        {% for task in maintenance_tasks %}
+        {% set status = computed_status(task) %}
+        <div class="bg-surface-container-lowest p-5 rounded-2xl">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ status_colors.get(status, status_colors['upcoming']) }}">
+                            {{ status }}
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-surface-container-high text-on-surface-variant">
+                            {{ task.priority }}
+                        </span>
+                        {% if task.components %}
+                        <span class="text-xs text-on-surface-variant">
+                            {{ task.components | map(attribute='name') | join(', ') }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h4 class="font-bold text-on-surface">{{ task.title }}</h4>
+                    <p class="text-sm text-on-surface-variant mt-1">
+                        {% if task.next_due %}Due {{ task.next_due | short_date }}{% endif %}
+                        {% if task.next_due and task.next_due_usage_value %} · {% endif %}
+                        {% if task.next_due_usage_value %}Due at {{ "{:,}".format(task.next_due_usage_value) }} {{ task.usage_trigger_label or "units" }}{% endif %}
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    {% if task.status != "paused" and task.status != "completed" %}
+                    <a href="/assets/{{ asset.id }}/maintenance-tasks/{{ task.id }}/complete"
+                       class="px-3 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold hover:opacity-90 transition-all">Mark Done</a>
+                    <form method="post" action="/assets/{{ asset.id }}/maintenance-tasks/{{ task.id }}/pause">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        <button type="submit" class="px-3 py-2 bg-surface-container-high text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-highest transition-colors">Pause</button>
+                    </form>
+                    {% elif task.status == "paused" %}
+                    <form method="post" action="/assets/{{ asset.id }}/maintenance-tasks/{{ task.id }}/resume">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        <button type="submit" class="px-3 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold hover:opacity-90 transition-all">Resume</button>
+                    </form>
+                    {% endif %}
+                    <a href="/assets/{{ asset.id }}/maintenance-tasks/{{ task.id }}/edit"
+                       class="px-3 py-2 bg-surface-container-high text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-highest transition-colors">Edit</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-surface-container-lowest p-8 rounded-2xl text-center">
+        <span class="material-symbols-outlined text-5xl text-outline-variant mb-3">event_repeat</span>
+        <p class="text-on-surface-variant">No maintenance tasks yet. Add one to track what is due next.</p>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}{% if asset %}Edit {{ asset.name }}{% else %}New Asset{% endif %} - HomeBase{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="mb-8 animate-fade-in">
+    {% if asset %}
+    <a href="/assets/{{ asset.id }}" class="text-primary hover:underline text-sm font-medium flex items-center gap-1 w-fit group">
+        <span class="material-symbols-outlined text-lg group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+        Back to {{ asset.name }}
+    </a>
+    {% else %}
+    <a href="/assets" class="text-primary hover:underline text-sm font-medium flex items-center gap-1 w-fit group">
+        <span class="material-symbols-outlined text-lg group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+        Back to Inventory
+    </a>
+    {% endif %}
+</div>
+
+<h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-8 animate-fade-up">
+    {% if asset %}Edit Asset{% else %}New Asset{% endif %}
+</h1>
+
+<form method="post"
+      action="{% if asset %}/assets/{{ asset.id }}/edit{% else %}/assets{% endif %}"
+      enctype="multipart/form-data"
+      class="max-w-2xl space-y-10">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+
+    {% if error %}
+    <div class="bg-error-container text-on-error-container px-4 py-3 rounded-xl text-sm" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Basic Info -->
+    <section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm space-y-5 animate-fade-up delay-1">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Basic Information</h2>
+
+        <div>
+            <label for="name" class="block text-sm font-medium text-on-surface mb-1">Name *</label>
+            <input type="text" id="name" name="name" required
+                   value="{{ asset.name if asset else '' }}"
+                   class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 focus:bg-surface-container-lowest transition-all">
+        </div>
+
+        <div>
+            <label for="category" class="block text-sm font-medium text-on-surface mb-1">Category *</label>
+            <select id="category" name="category" required
+                    hx-get="/assets/partials/vehicle-fields"
+                    hx-target="#vehicle-fields"
+                    hx-trigger="change"
+                    hx-swap="innerHTML"
+                    class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 focus:bg-surface-container-lowest transition-all">
+                <option value="">Select category...</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}"
+                        {% if asset and asset.category == cat %}selected{% endif %}>
+                    {{ cat | replace("_", " ") | title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="make" class="block text-sm font-medium text-on-surface mb-1">Make</label>
+                <input type="text" id="make" name="make"
+                       value="{{ asset.make if asset and asset.make else '' }}"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+            <div>
+                <label for="model_name" class="block text-sm font-medium text-on-surface mb-1">Model</label>
+                <input type="text" id="model_name" name="model_name"
+                       value="{{ asset.model_name if asset and asset.model_name else '' }}"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="year" class="block text-sm font-medium text-on-surface mb-1">Year</label>
+                <input type="number" id="year" name="year" min="1900" max="2100"
+                       value="{{ asset.year if asset and asset.year else '' }}"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+            <div>
+                <label for="serial_number" class="block text-sm font-medium text-on-surface mb-1">Serial Number</label>
+                <input type="text" id="serial_number" name="serial_number"
+                       value="{{ asset.serial_number if asset and asset.serial_number else '' }}"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+        </div>
+
+        <div>
+            <label for="location" class="block text-sm font-medium text-on-surface mb-1">Location</label>
+            <input type="text" id="location" name="location"
+                   value="{{ asset.location if asset and asset.location else '' }}"
+                   placeholder="e.g. Garage, Kitchen, Office"
+                   class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+        </div>
+    </section>
+
+    <!-- Purchase Info -->
+    <section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm space-y-5 animate-fade-up delay-2">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Purchase Information</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="purchase_date" class="block text-sm font-medium text-on-surface mb-1">Purchase Date</label>
+                <input type="date" id="purchase_date" name="purchase_date"
+                       value="{{ asset.purchase_date.isoformat() if asset and asset.purchase_date else '' }}"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+            <div>
+                <label for="purchase_price" class="block text-sm font-medium text-on-surface mb-1">Purchase Price</label>
+                <input type="number" id="purchase_price" name="purchase_price" step="0.01" min="0"
+                       value="{{ asset.purchase_price if asset and asset.purchase_price else '' }}"
+                       class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+            </div>
+        </div>
+
+        <div>
+            <label for="purchase_vendor" class="block text-sm font-medium text-on-surface mb-1">Vendor / Store</label>
+            <input type="text" id="purchase_vendor" name="purchase_vendor"
+                   value="{{ asset.purchase_vendor if asset and asset.purchase_vendor else '' }}"
+                   class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+        </div>
+    </section>
+
+    <!-- Warranty -->
+    <section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm space-y-5 animate-fade-up delay-3">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Warranty</h2>
+
+        <div>
+            <label for="warranty_expiration" class="block text-sm font-medium text-on-surface mb-1">Warranty Expiration</label>
+            <input type="date" id="warranty_expiration" name="warranty_expiration"
+                   value="{{ asset.warranty_expiration.isoformat() if asset and asset.warranty_expiration else '' }}"
+                   class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+        </div>
+        <div>
+            <label for="warranty_notes" class="block text-sm font-medium text-on-surface mb-1">Warranty Notes</label>
+            <textarea id="warranty_notes" name="warranty_notes" rows="2"
+                      class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">{{ asset.warranty_notes if asset and asset.warranty_notes else '' }}</textarea>
+        </div>
+    </section>
+
+    <!-- Vehicle fields (loaded via HTMX when category=vehicle) -->
+    <div id="vehicle-fields">
+        {% if asset and asset.category == "vehicle" %}
+        {% include "partials/vehicle_fields.html" %}
+        {% endif %}
+    </div>
+
+    <!-- Photo -->
+    <section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm space-y-4 animate-fade-up delay-4">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Photo</h2>
+
+        {% if asset and asset.photo %}
+        <img src="/assets/{{ asset.id }}/photo" alt="{{ asset.name }}"
+             class="w-48 h-48 object-cover rounded-xl">
+        {% endif %}
+        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"
+               class="block w-full text-sm text-slate-500
+                      file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0
+                      file:text-sm file:font-semibold file:bg-primary-container file:text-on-primary-container
+                      hover:file:bg-primary-fixed-dim transition-all">
+        <p class="text-xs text-slate-400">JPEG, PNG, WebP, or GIF. Max 10MB.</p>
+    </section>
+
+    <!-- Notes -->
+    <section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm space-y-4 animate-fade-up delay-5">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Notes</h2>
+        <textarea id="notes" name="notes" rows="3"
+                  class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">{{ asset.notes if asset and asset.notes else '' }}</textarea>
+    </section>
+
+    <!-- Submit -->
+    <div class="flex gap-3 animate-fade-up delay-6">
+        <button type="submit"
+                class="flex-1 signature-cta text-on-primary font-bold py-3 px-8 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">{% if asset %}save{% else %}add{% endif %}</span>
+            {% if asset %}Save Changes{% else %}Create Asset{% endif %}
+        </button>
+        <a href="{% if asset %}/assets/{{ asset.id }}{% else %}/assets{% endif %}"
+           class="py-3 px-8 bg-surface-container-high text-on-surface-variant rounded-xl font-semibold hover:bg-surface-container-highest transition-colors text-center">
+            Cancel
+        </a>
+    </div>
+</form>
+
+<script>
+    document.getElementById('category').addEventListener('change', function() {
+        if (this.value !== 'vehicle') {
+            var container = document.getElementById('vehicle-fields');
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+        }
+    });
+</script>
+{% endblock %}

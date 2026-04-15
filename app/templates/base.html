@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HomeBase{% endblock %}</title>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('theme');
+                var prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = stored || (prefers ? 'dark' : 'light');
+                document.documentElement.classList.add(theme);
+            } catch (e) {
+                document.documentElement.classList.add('light');
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="/static/css/homebase.css">
+    <script src="/static/vendor/htmx.min.js" defer></script>
+    <script src="/static/js/icons.js" defer></script>
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen">
+    {% include "partials/sidebar.html" %}
+
+    <!-- Mobile nav overlay -->
+    <div id="mobile-nav-backdrop" class="mobile-nav-backdrop fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+         onclick="closeMobileNav()"></div>
+    <div id="mobile-nav-panel" class="mobile-nav-panel fixed inset-y-0 left-0 w-72 bg-nav-surface z-50 md:hidden p-4 flex flex-col gap-2">
+        {% include "partials/sidebar_content.html" %}
+    </div>
+
+    <main class="flex-1 md:ml-64 min-h-screen flex flex-col">
+        {% include "partials/topbar.html" %}
+
+        <div class="p-6 lg:p-10 max-w-7xl w-full mx-auto">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script>
+        function openMobileNav() {
+            document.getElementById('mobile-nav-backdrop').classList.add('open');
+            document.getElementById('mobile-nav-panel').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMobileNav() {
+            document.getElementById('mobile-nav-backdrop').classList.remove('open');
+            document.getElementById('mobile-nav-panel').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        function toggleTheme() {
+            var root = document.documentElement;
+            var isDark = root.classList.contains('dark');
+            root.classList.remove(isDark ? 'dark' : 'light');
+            root.classList.add(isDark ? 'light' : 'dark');
+            try { localStorage.setItem('theme', isDark ? 'light' : 'dark'); } catch (e) {}
+        }
+    </script>
+</body>
+</html>

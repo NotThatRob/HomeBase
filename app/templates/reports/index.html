@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - HomeBase{% endblock %}
+
+{% block head %}
+<script src="/static/vendor/chart.umd.js"></script>
+<script src="/static/js/chart_export.js"></script>
+{% endblock %}
+
+{% block content %}
+{% set entity_labels = {
+    "assets": ("Assets", "inventory_2"),
+    "service_records": ("Service records", "build_circle"),
+    "fuel_logs": ("Fuel logs", "local_gas_station"),
+    "recurring_costs": ("Recurring costs", "event_repeat"),
+    "maintenance_tasks": ("Maintenance tasks", "construction"),
+    "documents": ("Document metadata", "description")
+} %}
+
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-up">
+    <div>
+        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">Reports</h1>
+        <p class="text-on-surface-variant max-w-xl">Review household charts, export chart PNGs, download raw data, or take a full JSON backup.</p>
+    </div>
+</div>
+
+<!-- Report charts -->
+<section class="mb-10 animate-fade-up delay-1">
+    <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Report charts</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="bg-surface-container-lowest rounded-2xl p-6">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6">
+                <div>
+                    <h3 class="font-bold font-headline text-on-surface mb-1">Cost by year</h3>
+                    <p class="text-sm text-on-surface-variant">Purchase, service, and fuel totals by calendar year.</p>
+                </div>
+                {% if cost_by_year_chart.labels %}
+                <button type="button"
+                        onclick="downloadChartPng('costByYearChart', 'homebase-cost-by-year')"
+                        class="inline-flex items-center gap-2 bg-surface-container-high text-on-surface rounded-xl px-4 py-2 text-sm font-bold hover:bg-surface-container-highest transition-colors">
+                    <span class="material-symbols-outlined text-base">image</span>
+                    Download PNG
+                </button>
+                {% endif %}
+            </div>
+            {% if cost_by_year_chart.labels %}
+            <div class="relative h-72">
+                <canvas id="costByYearChart"></canvas>
+            </div>
+            {% else %}
+            <div class="flex flex-col items-center justify-center h-72 text-center">
+                <span class="material-symbols-outlined text-4xl text-outline-variant mb-2">stacked_bar_chart</span>
+                <p class="text-sm text-on-surface-variant">Add purchase, service, or fuel costs to chart yearly totals.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="bg-surface-container-lowest rounded-2xl p-6">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6">
+                <div>
+                    <h3 class="font-bold font-headline text-on-surface mb-1">Service cost by category</h3>
+                    <p class="text-sm text-on-surface-variant">Maintenance, repairs, inspections, upgrades, and other service spend.</p>
+                </div>
+                {% if service_cost_by_category_chart.labels %}
+                <button type="button"
+                        onclick="downloadChartPng('serviceCostByCategoryChart', 'homebase-service-cost-by-category')"
+                        class="inline-flex items-center gap-2 bg-surface-container-high text-on-surface rounded-xl px-4 py-2 text-sm font-bold hover:bg-surface-container-highest transition-colors">
+                    <span class="material-symbols-outlined text-base">image</span>
+                    Download PNG
+                </button>
+                {% endif %}
+            </div>
+            {% if service_cost_by_category_chart.labels %}
+            <div class="relative h-72">
+                <canvas id="serviceCostByCategoryChart"></canvas>
+            </div>
+            {% else %}
+            <div class="flex flex-col items-center justify-center h-72 text-center">
+                <span class="material-symbols-outlined text-4xl text-outline-variant mb-2">bar_chart</span>
+                <p class="text-sm text-on-surface-variant">Log service records with costs to chart service categories.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Canned reports -->
+<section class="mb-10 animate-fade-up delay-2">
+    <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Canned reports</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <a href="/reports/cost-by-asset-year" class="bg-surface-container-lowest rounded-2xl p-6 hover:bg-surface-container-low transition-all group">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center">
+                    <span class="material-symbols-outlined">stacked_bar_chart</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-bold font-headline text-on-surface mb-1">Cost per asset, per year</h3>
+                    <p class="text-sm text-on-surface-variant">Purchase + service + fuel grouped by asset and year.</p>
+                </div>
+                <span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+            </div>
+        </a>
+        <a href="/reports/service-history" class="bg-surface-container-lowest rounded-2xl p-6 hover:bg-surface-container-low transition-all group">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center">
+                    <span class="material-symbols-outlined">history</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-bold font-headline text-on-surface mb-1">Service history log</h3>
+                    <p class="text-sm text-on-surface-variant">Chronological log of every service record across every asset.</p>
+                </div>
+                <span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+            </div>
+        </a>
+    </div>
+</section>
+
+<!-- Raw CSV exports -->
+<section class="mb-10 animate-fade-up delay-3">
+    <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Raw data exports (CSV)</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {% for entity in export_entities %}
+        {% set label, icon = entity_labels.get(entity, (entity, "table_view")) %}
+        <a href="/reports/exports/{{ entity }}.csv"
+           class="bg-surface-container-lowest rounded-2xl p-5 hover:bg-surface-container-low transition-all flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">{{ icon }}</span>
+            <span class="flex-1 font-semibold text-on-surface text-sm">{{ label }}</span>
+            <span class="material-symbols-outlined text-on-surface-variant text-base">download</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Full backup -->
+<section class="animate-fade-up delay-4">
+    <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Full backup</h2>
+    <a href="/reports/backup.json"
+       class="bg-surface-container-lowest rounded-2xl p-6 flex items-center gap-4 hover:bg-surface-container-low transition-all group">
+        <div class="w-10 h-10 rounded-xl bg-tertiary-container text-on-tertiary-container flex items-center justify-center">
+            <span class="material-symbols-outlined">archive</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <h3 class="font-bold font-headline text-on-surface mb-1">Download everything as JSON</h3>
+            <p class="text-sm text-on-surface-variant">One file with every entity — handy for migrating or archiving.</p>
+        </div>
+        <span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-0.5 transition-transform">download</span>
+    </a>
+</section>
+
+<script>
+(function() {
+    const costByYear = {{ cost_by_year_chart | tojson }};
+    const serviceByCategory = {{ service_cost_by_category_chart | tojson }};
+    const styles = getComputedStyle(document.documentElement);
+    const token = (name) => styles.getPropertyValue(name).trim();
+
+    const label = token("--color-on-surface-variant");
+    const grid = token("--color-outline-variant");
+    const chartBorder = token("--color-surface-container-lowest");
+    const palette = [
+        token("--color-primary"),
+        token("--color-tertiary"),
+        token("--color-secondary"),
+        token("--color-error"),
+        token("--color-primary-dim"),
+        token("--color-outline"),
+    ];
+
+    const moneyTick = (value) => "$" + Number(value).toLocaleString();
+
+    const costCanvas = document.getElementById("costByYearChart");
+    if (costCanvas && costByYear.labels.length) {
+        new Chart(costCanvas, {
+            type: "bar",
+            data: {
+                labels: costByYear.labels,
+                datasets: [
+                    {
+                        label: "Purchase",
+                        data: costByYear.purchase,
+                        backgroundColor: token("--color-primary"),
+                        borderRadius: 6,
+                    },
+                    {
+                        label: "Service",
+                        data: costByYear.service,
+                        backgroundColor: token("--color-tertiary"),
+                        borderRadius: 6,
+                    },
+                    {
+                        label: "Fuel",
+                        data: costByYear.fuel,
+                        backgroundColor: token("--color-secondary"),
+                        borderRadius: 6,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { color: label, font: { size: 12 }, padding: 16 },
+                    },
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { display: false },
+                        ticks: { color: label },
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        grid: { color: grid },
+                        ticks: { color: label, callback: moneyTick },
+                    },
+                },
+            },
+        });
+    }
+
+    const serviceCanvas = document.getElementById("serviceCostByCategoryChart");
+    if (serviceCanvas && serviceByCategory.labels.length) {
+        new Chart(serviceCanvas, {
+            type: "bar",
+            data: {
+                labels: serviceByCategory.labels,
+                datasets: [{
+                    label: "Service cost",
+                    data: serviceByCategory.values,
+                    backgroundColor: palette.slice(0, serviceByCategory.labels.length),
+                    borderColor: chartBorder,
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    maxBarThickness: 48,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: label, maxRotation: 0 },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: grid },
+                        ticks: { color: label, callback: moneyTick },
+                    },
+                },
+            },
+        });
+    }
+})();
+</script>
+{% endblock %}

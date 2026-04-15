@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ document.title }} - HomeBase{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="mb-8 animate-fade-in">
+    <a href="/documents/{{ document.id }}" class="text-primary hover:underline text-sm font-medium flex items-center gap-1 w-fit group">
+        <span class="material-symbols-outlined text-lg group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+        Back to document
+    </a>
+</div>
+
+<h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2 animate-fade-up">Edit Document</h1>
+<p class="text-on-surface-variant mb-8">{{ document.file_name }}</p>
+
+<form method="post" action="/documents/{{ document.id }}/edit" class="max-w-2xl space-y-10">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+
+    <!-- Metadata -->
+    <section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm space-y-5">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Details</h2>
+
+        <div>
+            <label for="title" class="block text-sm font-medium text-on-surface mb-1">Title *</label>
+            <input type="text" id="title" name="title" required maxlength="200"
+                   value="{{ document.title }}"
+                   class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+        </div>
+
+        <div>
+            <label for="doc_type" class="block text-sm font-medium text-on-surface mb-1">Type</label>
+            <select id="doc_type" name="doc_type"
+                    class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">
+                {% for dt in doc_types %}
+                <option value="{{ dt }}" {% if document.doc_type == dt %}selected{% endif %}>{{ dt | title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="notes" class="block text-sm font-medium text-on-surface mb-1">Notes</label>
+            <textarea id="notes" name="notes" rows="3"
+                      class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40 transition-all">{{ document.notes if document.notes else '' }}</textarea>
+        </div>
+    </section>
+
+    {% if components %}
+    <section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm space-y-5">
+        <h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Related Components</h2>
+        <div class="flex flex-wrap gap-3">
+            {% for component in components %}
+            <label class="flex items-center gap-2 cursor-pointer bg-surface-container-highest rounded-xl px-4 py-2.5 hover:bg-surface-container-high transition-colors">
+                <input type="checkbox" name="component_ids" value="{{ component.id }}"
+                       {% if component in document.components %}checked{% endif %}
+                       class="rounded border-outline-variant text-primary focus:ring-primary/40">
+                <span class="text-sm font-medium text-on-surface">{{ component.name }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <div class="flex gap-3">
+        <button type="submit"
+                class="flex-1 signature-cta text-on-primary font-bold py-3 px-8 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">save</span>
+            Save Changes
+        </button>
+        <a href="/documents/{{ document.id }}"
+           class="py-3 px-8 bg-surface-container-high text-on-surface-variant rounded-xl font-semibold hover:bg-surface-container-highest transition-colors text-center">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}

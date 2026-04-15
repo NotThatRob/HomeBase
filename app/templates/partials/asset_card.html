@@ -1,0 +1,46 @@
+<a href="/assets/{{ asset.id }}"
+   class="group flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden hover:translate-y-[-3px] hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+    {% if asset.photo %}
+    <div class="h-48 overflow-hidden">
+        <img src="/assets/{{ asset.id }}/photo" alt="{{ asset.name }}"
+             onerror="this.style.display='none';var p=this.parentElement;p.classList.add('flex','items-center','justify-center','bg-surface-container-low');var s=document.createElement('span');s.className='material-symbols-outlined text-5xl text-outline-variant';s.textContent='inventory_2';p.appendChild(s)"
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out">
+    </div>
+    {% else %}
+    <div class="h-48 overflow-hidden flex items-center justify-center bg-surface-container-low">
+        <span class="material-symbols-outlined text-5xl text-outline-variant group-hover:text-primary/40 group-hover:scale-110 transition-all duration-500">
+            {% if asset.category == "vehicle" %}directions_car
+            {% elif asset.category == "appliance" %}kitchen
+            {% elif asset.category == "home_system" %}home_repair_service
+            {% elif asset.category == "tech" %}devices
+            {% elif asset.category == "furniture" %}chair
+            {% else %}inventory_2{% endif %}
+        </span>
+    </div>
+    {% endif %}
+    <div class="p-5 flex flex-col gap-3">
+        <div class="flex justify-between items-start">
+            <div>
+                <span class="text-[10px] font-bold uppercase tracking-[0.1em] text-on-surface-variant/70 mb-1 block">
+                    {{ asset.category | replace("_", " ") }}
+                </span>
+                <h3 class="text-lg font-bold text-on-surface font-headline group-hover:text-primary transition-colors duration-200">{{ asset.name }}</h3>
+            </div>
+            {% if asset.status == "retired" %}
+            <span class="bg-slate-200 px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-500 uppercase">Retired</span>
+            {% endif %}
+        </div>
+        {% if asset.make or asset.model_name %}
+        <p class="text-sm text-on-surface-variant">
+            {{ asset.make or "" }} {{ asset.model_name or "" }}
+            {% if asset.year %}({{ asset.year }}){% endif %}
+        </p>
+        {% endif %}
+        {% if asset.location %}
+        <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm text-on-surface-variant">location_on</span>
+            <span class="text-xs text-on-surface-variant">{{ asset.location }}</span>
+        </div>
+        {% endif %}
+    </div>
+</a>

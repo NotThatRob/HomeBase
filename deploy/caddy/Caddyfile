@@ -1,0 +1,13 @@
+{
+	email admin@{$HOMEBASE_DOMAIN}
+}
+
+{$HOMEBASE_DOMAIN} {
+	@blocked not remote_ip {$HOMEBASE_ALLOWED_IPS}
+	respond @blocked "Access denied" 403
+
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+	encode zstd gzip
+	reverse_proxy app:8000
+}

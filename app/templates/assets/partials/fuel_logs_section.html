@@ -1,0 +1,93 @@
+{#
+  Fuel log section partial.
+
+  Expected context:
+    asset             — vehicle Asset object
+    fuel_logs         — iterable of FuelLog (already sliced or full)
+    fuel_summary      — dict with fillup_count, total_cost, total_gallons, etc.
+    fuel_mpg_by_id    — dict mapping FuelLog.id to calculated MPG
+    show_view_all     — bool; render "View All" button when True
+#}
+<div id="fuel-logs-section" class="mb-10 animate-fade-up delay-4">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Fuel Log</h3>
+        {% if asset.status != "retired" %}
+        <a href="/assets/{{ asset.id }}/fuel-logs/new"
+           class="px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-all flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-lg">local_gas_station</span>
+            Log Fuel
+        </a>
+        {% endif %}
+    </div>
+
+    {% if fuel_summary.fillup_count > 0 %}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-surface-container-low p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Fuel Spend</div>
+            <div class="text-xl font-bold font-headline text-primary">{{ fuel_summary.total_cost | currency }}</div>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Fillups</div>
+            <div class="text-xl font-bold font-headline text-on-surface">{{ fuel_summary.fillup_count }}</div>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Avg Price</div>
+            <div class="text-xl font-bold font-headline text-on-surface">${{ "%.3f"|format(fuel_summary.average_price) }}</div>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-2xl text-center">
+            <div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Avg MPG</div>
+            <div class="text-xl font-bold font-headline text-on-surface">{{ fuel_summary.average_mpg if fuel_summary.average_mpg else "—" }}</div>
+        </div>
+    </div>
+
+    <div class="space-y-3">
+        {% for log in fuel_logs %}
+        <a href="/assets/{{ asset.id }}/fuel-logs/{{ log.id }}"
+           class="block bg-surface-container-lowest p-5 rounded-2xl hover:shadow-md hover:translate-y-[-1px] transition-all duration-200 group">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {% if log.full_tank %}bg-secondary-container text-on-secondary-container{% else %}bg-surface-container-high text-on-surface{% endif %}">
+                        {% if log.full_tank %}Full{% else %}Partial{% endif %}
+                    </span>
+                    <span class="font-bold text-on-surface group-hover:text-primary transition-colors">
+                        {{ log.fillup_date | short_date }}
+                    </span>
+                    {% if log.station %}
+                    <span class="text-xs text-on-surface-variant truncate">{{ log.station }}</span>
+                    {% endif %}
+                </div>
+                <div class="flex flex-wrap items-center gap-4 text-sm">
+                    <span class="font-bold text-primary">{{ log.total_cost | currency }}</span>
+                    {% if log.gallons is not none %}
+                    <span class="text-on-surface-variant">{{ "%.3f"|format(log.gallons) }} gal</span>
+                    {% endif %}
+                    {% if log.mileage_at_fillup is not none %}
+                    <span class="text-on-surface-variant">{{ "{:,}".format(log.mileage_at_fillup) }} mi</span>
+                    {% endif %}
+                    <span class="text-on-surface-variant">{{ fuel_mpg_by_id.get(log.id, "—") }} mpg</span>
+                    <span class="material-symbols-outlined text-lg text-on-surface-variant/50 group-hover:text-primary transition-colors">chevron_right</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if show_view_all %}
+    <div class="mt-4 flex justify-center">
+        <button type="button"
+                hx-get="/assets/{{ asset.id }}/partials/fuel-logs"
+                hx-target="#fuel-logs-section"
+                hx-swap="outerHTML"
+                class="px-5 py-2.5 bg-surface-container-high text-primary font-bold rounded-xl text-sm flex items-center gap-2 hover:bg-primary hover:text-on-primary transition-all">
+            View all {{ fuel_summary.fillup_count }}
+            <span class="material-symbols-outlined text-lg">expand_more</span>
+        </button>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="bg-surface-container-lowest p-8 rounded-2xl text-center">
+        <span class="material-symbols-outlined text-5xl text-outline-variant mb-3">local_gas_station</span>
+        <p class="text-on-surface-variant">No fuel logs yet. Add your next fillup while you are at the pump.</p>
+    </div>
+    {% endif %}
+</div>

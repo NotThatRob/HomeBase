@@ -1,0 +1,17 @@
+[Unit]
+Description=HomeBase weekly maintenance digest
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=homebase
+Group=homebase
+WorkingDirectory=/opt/homebase
+EnvironmentFile=/opt/homebase/.env
+ExecStart=/opt/homebase/venv/bin/python -m app.cli.send_digests --frequency weekly --due-now
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
