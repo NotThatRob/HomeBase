@@ -3,8 +3,9 @@ from secrets import token_urlsafe
 
 from fastapi import HTTPException, Request
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import HTMLResponse, RedirectResponse
+from starlette.datastructures import MutableHeaders
+from starlette.responses import HTMLResponse, RedirectResponse, Response
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.config import get_settings
 from app.database import get_session_factory
@@ -16,6 +17,7 @@ CSRF_COOKIE_NAME = "homebase_csrf"
 EXEMPT_PREFIXES = ("/login", "/health", "/ready", "/static", "/favicon.ico")
 MUTATING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 CSRF_SALT = "homebase-csrf"
+MAX_CSRF_FORM_BODY_SIZE = 12 * 1024 * 1024
 
 
 def create_session_cookie(user_id: uuid.UUID, secret_key: str, session_version: int = 0) -> str:
@@ -71,8 +73,78 @@ def default_get_user_by_id(user_id: uuid.UUID) -> User | None:
         session.close()
 
 
-class AuthMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
+class RequestBodyTooLarge(Exception):
+    pass
+
+
+async def read_request_body(receive: Receive, max_size: int) -> bytes:
+    chunks = []
+    size = 0
+    while True:
+        message = await receive()
+        if message["type"] == "http.disconnect":
+            break
+        chunk = message.get("body", b"")
+        chunks.append(chunk)
+        size += len(chunk)
+        if size > max_size:
+            raise RequestBodyTooLarge
+        if not message.get("more_body", False):
+            break
+    return b"".join(chunks)
+
+
+def replay_receive(body: bytes) -> Receive:
+    sent = False
+
+    async def receive() -> Message:
+        nonlocal sent
+        if sent:
+            return {"type": "http.request", "body": b"", "more_body": False}
+        sent = True
+        return {"type": "http.request", "body": body, "more_body": False}
+
+    return receive
+
+
+def csrf_cookie_headers(token: str, settings) -> list[tuple[bytes, bytes]]:
+    response = Response()
+    response.set_cookie(
+        CSRF_COOKIE_NAME,
+        token,
+        max_age=settings.session_max_age,
+        secure=settings.effective_cookie_secure,
+        httponly=True,
+        samesite="lax",
+        path="/",
+    )
+    return list(response.raw_headers)
+
+
+def with_csrf_cookie(send: Send, token: str, settings) -> Send:
+    raw_headers = csrf_cookie_headers(token, settings)
+
+    async def send_with_cookie(message: Message) -> None:
+        if message["type"] == "http.response.start":
+            headers = MutableHeaders(scope=message)
+            for name, value in raw_headers:
+                headers.append(name.decode("latin-1"), value.decode("latin-1"))
+        await send(message)
+
+    return send_with_cookie
+
+
+class AuthMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        scope.setdefault("state", {})
+        request = Request(scope, receive)
         path = request.url.path
         settings = get_settings()
         csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
@@ -83,11 +155,21 @@ class AuthMiddleware(BaseHTTPMiddleware):
             csrf_cookie if csrf_cookie_valid else create_csrf_token(settings.secret_key)
         )
 
+        receive_for_app = receive
+
         if settings.effective_csrf_enabled and request.method in MUTATING_METHODS:
             submitted_token = request.headers.get("x-csrf-token")
             if not submitted_token:
                 try:
-                    form = await request.form()
+                    body = await read_request_body(receive, MAX_CSRF_FORM_BODY_SIZE)
+                except RequestBodyTooLarge:
+                    response = HTMLResponse("Request body too large", status_code=413)
+                    await response(scope, receive, send)
+                    return
+                receive_for_app = replay_receive(body)
+                form_request = Request(scope, replay_receive(body))
+                try:
+                    form = await form_request.form()
                 except Exception:
                     form = {}
                 submitted_token = form.get("csrf_token")
@@ -100,31 +182,28 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     settings.session_max_age,
                 )
             ):
-                return HTMLResponse("CSRF validation failed", status_code=403)
+                response = HTMLResponse("CSRF validation failed", status_code=403)
+                await response(scope, receive_for_app, send)
+                return
 
         if any(path.startswith(prefix) for prefix in EXEMPT_PREFIXES):
-            response = await call_next(request)
             if not csrf_cookie_valid:
-                response.set_cookie(
-                    CSRF_COOKIE_NAME,
-                    request.state.csrf_token,
-                    max_age=settings.session_max_age,
-                    secure=settings.effective_cookie_secure,
-                    httponly=True,
-                    samesite="lax",
-                    path="/",
-                )
-            return response
+                send = with_csrf_cookie(send, request.state.csrf_token, settings)
+            await self.app(scope, receive_for_app, send)
+            return
 
         cookie = request.cookies.get(COOKIE_NAME)
         if not cookie:
-            return RedirectResponse("/login", status_code=303)
+            response = RedirectResponse("/login", status_code=303)
+            await response(scope, receive_for_app, send)
+            return
 
         session_data = load_session_cookie(cookie, settings.secret_key, settings.session_max_age)
         if not session_data:
             response = RedirectResponse("/login", status_code=303)
             response.delete_cookie(COOKIE_NAME)
-            return response
+            await response(scope, receive_for_app, send)
+            return
 
         # Use app.state.get_user_by_id if set (for test overrides), else default
         lookup = getattr(request.app.state, "get_user_by_id", default_get_user_by_id)
@@ -133,26 +212,19 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if not user or not getattr(user, "is_active", True):
             response = RedirectResponse("/login", status_code=303)
             response.delete_cookie(COOKIE_NAME)
-            return response
+            await response(scope, receive_for_app, send)
+            return
         if getattr(user, "session_version", 0) != session_data["session_version"]:
             response = RedirectResponse("/login", status_code=303)
             response.delete_cookie(COOKIE_NAME)
-            return response
+            await response(scope, receive_for_app, send)
+            return
 
         request.state.user = user
         bind_user_id(user.id)
-        response = await call_next(request)
         if not csrf_cookie_valid:
-            response.set_cookie(
-                CSRF_COOKIE_NAME,
-                request.state.csrf_token,
-                max_age=settings.session_max_age,
-                secure=settings.effective_cookie_secure,
-                httponly=True,
-                samesite="lax",
-                path="/",
-            )
-        return response
+            send = with_csrf_cookie(send, request.state.csrf_token, settings)
+        await self.app(scope, receive_for_app, send)
 
 
 def get_current_user(request: Request) -> User:
