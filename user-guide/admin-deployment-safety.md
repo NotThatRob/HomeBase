@@ -37,6 +37,7 @@ Then replace every `CHANGE_ME` value:
 ```bash
 POSTGRES_PASSWORD=CHANGE_ME_DATABASE_PASSWORD
 SECRET_KEY=CHANGE_ME_GENERATE_WITH_OPENSSL_RAND_HEX_32
+TOTP_ENCRYPTION_KEY=CHANGE_ME_GENERATE_RANDOM_32_BYTE_URLSAFE_BASE64_KEY
 ADMIN_PASSWORD=CHANGE_ME_ADMIN_PASSWORD
 ```
 
@@ -45,6 +46,16 @@ Use a generated secret key, not a password you can remember:
 ```bash
 openssl rand -hex 32
 ```
+
+Generate the two-factor encryption key with:
+
+```bash
+python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
+```
+
+`TOTP_ENCRYPTION_KEY` is a server-side deployment key, not a user code. Back it
+up with the rest of your private deployment secrets and keep it stable after
+users enable two-factor authentication.
 
 ## Production Safety Checks
 
@@ -59,6 +70,7 @@ Production startup requires:
 - `COOKIE_SECURE=true`
 - `CSRF_ENABLED=true`
 - `SECRET_KEY` is not the default
+- `TOTP_ENCRYPTION_KEY` is set and valid
 - `ADMIN_PASSWORD` is not the default
 - `ALLOWED_HOSTS` includes the real domain
 
@@ -118,6 +130,10 @@ Back up both pieces of data:
 
 - PostgreSQL database volume
 - HomeBase uploads volume
+
+Also keep a private backup of `.env`. Without the original
+`TOTP_ENCRYPTION_KEY`, existing two-factor secrets cannot be decrypted after a
+restore.
 
 The self-hosting guide includes backup and restore commands. Test restore steps
 before relying on a deployment for important records.

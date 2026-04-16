@@ -13,8 +13,8 @@ default.
   traffic
 
 HomeBase requires HTTPS in production. Production startup refuses default
-secrets, debug mode, disabled CSRF protection, insecure cookies, and non-HTTPS
-`BASE_URL` values.
+secrets, missing or invalid MFA encryption keys, debug mode, disabled CSRF
+protection, insecure cookies, and non-HTTPS `BASE_URL` values.
 
 ## Install
 
@@ -52,6 +52,8 @@ python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).de
 `TOTP_ENCRYPTION_KEY` is a server-side deployment key. It protects
 authenticator secrets stored by HomeBase. Users do not need this value; they
 set up two-factor authentication later from **Settings** in the web UI.
+Keep this value in your secret backup and do not rotate it casually. Existing
+two-factor secrets cannot be decrypted if this key is lost or changed.
 
 Start HomeBase:
 
@@ -139,6 +141,10 @@ intentionally updating dependencies and can run the test suite.
 
 ## Backups
 
+Back up `.env` separately from your data backups. It contains deployment
+secrets, including `SECRET_KEY` and `TOTP_ENCRYPTION_KEY`. Keep it private, but
+make sure it is recoverable.
+
 Back up both named volumes: PostgreSQL data and uploaded files. A logical
 database dump plus a tarball of uploads is portable and easy to restore.
 
@@ -166,8 +172,8 @@ and confirm you can log in, view assets, and open uploaded files.
 ## Restore
 
 The safest restore is into a fresh host or a clean empty database. Clone the
-repo, copy `.env` and the backup files to the host, start only PostgreSQL, then
-restore the database and uploads before starting the app:
+repo, copy the original `.env` and the backup files to the host, start only
+PostgreSQL, then restore the database and uploads before starting the app:
 
 ```bash
 set -a
@@ -221,9 +227,13 @@ addresses; use the user ID and request logs for troubleshooting.
 ## Troubleshooting
 
 - **App exits on startup**: run `docker compose -f compose.prod.yaml logs app`.
-  Production startup refuses default `SECRET_KEY`, missing
+  Production startup refuses default `SECRET_KEY`, missing or invalid
   `TOTP_ENCRYPTION_KEY`, default `ADMIN_PASSWORD`, non-HTTPS `BASE_URL`,
-  disabled CSRF, and insecure cookies.
+  disabled CSRF, insecure cookies, and an empty host allowlist.
+- **Two-factor codes stop working after a restore or config change**: confirm
+  the restored `.env` uses the same `TOTP_ENCRYPTION_KEY` that encrypted the
+  database values. If the key was lost, affected users need two-factor
+  authentication reset by an admin.
 - **Database is not ready**: the app waits for PostgreSQL before migrations.
   Check `docker compose -f compose.prod.yaml logs db` if the timeout is reached.
 - **Caddy cannot get a certificate**: confirm `HOMEBASE_DOMAIN` resolves to the

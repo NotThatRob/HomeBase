@@ -244,7 +244,8 @@ value before running with `DEBUG=false`.
 For production, use the Docker + Caddy deployment above. If you are building a
 custom non-Docker deployment, set `ENVIRONMENT=production`, `DEBUG=false`, a
 non-default `SECRET_KEY`, a non-default `ADMIN_PASSWORD`, an `https://`
-`BASE_URL`, and `ALLOWED_HOSTS` for your domain.
+`BASE_URL`, `ALLOWED_HOSTS` for your domain, and a valid
+`TOTP_ENCRYPTION_KEY`.
 
 ### 7. Run migrations and start the server
 
@@ -258,8 +259,9 @@ Open <http://localhost:8000>.
 On first launch an admin user is created from `ADMIN_USERNAME` / `ADMIN_PASSWORD` (defaults: `admin` / `changeme`). You'll be redirected to `/login` — use those credentials, then walk through the first-run wizard.
 
 > **WARNING**: Before any non-local deployment, change `ADMIN_USERNAME`,
-> `ADMIN_PASSWORD`, and `SECRET_KEY`. Production startup also requires HTTPS,
-> secure cookies, CSRF protection, and a valid host allowlist.
+> `ADMIN_PASSWORD`, `SECRET_KEY`, and `TOTP_ENCRYPTION_KEY`. Production startup
+> also requires HTTPS, secure cookies, CSRF protection, and a valid host
+> allowlist.
 
 ### Diagnostics
 
@@ -409,6 +411,8 @@ deployment issues, use the
 - Uploaded files are stored under `UPLOAD_DIR`, but they are not mounted as public static files. Asset photos and documents are served through authenticated routes that enforce shared/personal asset visibility.
 - CSRF protection is enabled automatically outside local debug mode. Forms include hidden CSRF tokens, including HTMX forms.
 - TOTP secrets are encrypted with `TOTP_ENCRYPTION_KEY`, a server-side deployment key. Users set up two-factor authentication from Settings in the web UI.
+  Back up this key with your private deployment secrets and keep it stable after
+  users enable two-factor authentication.
 - Login attempts are rate-limited in process. For multi-worker deployments, move this counter to shared storage.
 - Put a request body limit in the reverse proxy as well as the app-level 10 MB upload limit. For Caddy, use a site-level `request_body` limit appropriate for the deployment.
 

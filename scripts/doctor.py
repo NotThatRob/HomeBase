@@ -32,6 +32,9 @@ REQUIRED_IMPORTS = {
     "pydantic-settings": "pydantic_settings",
     "bcrypt": "bcrypt",
     "itsdangerous": "itsdangerous",
+    "cryptography": "cryptography",
+    "pyotp": "pyotp",
+    "qrcode": "qrcode",
 }
 
 
@@ -181,6 +184,15 @@ def check_production_defaults(settings) -> CheckResult:
         problems.append("SECRET_KEY is still the default")
     if settings.admin_password == DEFAULT_ADMIN_PASSWORD:
         problems.append("ADMIN_PASSWORD is still the default")
+    if not settings.totp_encryption_key:
+        problems.append("TOTP_ENCRYPTION_KEY must be set")
+    else:
+        try:
+            from app.services.mfa import validate_totp_encryption_key
+
+            validate_totp_encryption_key(settings.totp_encryption_key)
+        except Exception as exc:
+            problems.append(f"TOTP_ENCRYPTION_KEY is invalid: {exc}")
     if parsed_base_url.scheme != "https" or not parsed_base_url.hostname:
         problems.append("BASE_URL must be an https:// URL")
     if not settings.effective_allowed_hosts:
@@ -292,6 +304,7 @@ def check_prod_deployment_files(root: Path) -> CheckResult:
         "DEBUG=false",
         "COOKIE_SECURE=true",
         "CSRF_ENABLED=true",
+        "TOTP_ENCRYPTION_KEY=",
         "LOG_FORMAT=json",
     ):
         if required not in env:
