@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Set Up Two-Factor - HomeBase{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl space-y-8">
+    <div>
+        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">Set up two-factor authentication</h1>
+        <p class="text-on-surface-variant">Use an authenticator app to add one extra step when you sign in.</p>
+    </div>
+
+    <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-6">
+        {% if error %}
+        <div class="rounded-xl bg-error-container text-on-error-container px-4 py-3 text-sm font-medium">{{ error }}</div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
+            <div class="bg-white rounded-xl p-4">
+                <img src="{{ qr_data_uri }}" alt="QR code for authenticator setup" class="w-full h-auto">
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <h2 class="text-lg font-bold text-on-surface mb-2">1. Open your authenticator app</h2>
+                    <p class="text-sm text-on-surface-variant">
+                        Choose the option to add a new account, then scan this QR code.
+                    </p>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-on-surface mb-2">2. If scanning does not work</h2>
+                    <p class="text-sm text-on-surface-variant mb-2">Enter this setup key manually:</p>
+                    <code class="block break-all rounded-lg bg-surface-container-highest px-3 py-2 text-sm text-on-surface">{{ secret }}</code>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-on-surface mb-2">3. Enter the 6-digit code</h2>
+                    <p class="text-sm text-on-surface-variant">
+                        Your app will show a code that changes every 30 seconds.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" action="/settings/security/totp/confirm" class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">6-Digit Code</span>
+                <input type="text" name="code" required autofocus autocomplete="one-time-code" inputmode="numeric"
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40"
+                       placeholder="123456">
+            </label>
+            <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
+                Confirm Setup
+            </button>
+        </form>
+    </section>
+</div>
+{% endblock %}

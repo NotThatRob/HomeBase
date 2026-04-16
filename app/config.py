@@ -1,3 +1,5 @@
+import base64
+import hashlib
 from functools import lru_cache
 from urllib.parse import urlparse
 
@@ -27,6 +29,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_format: str = "plain"
     log_sql: bool = False
+    totp_encryption_key: str | None = None
 
     @property
     def is_production(self) -> bool:
@@ -52,6 +55,13 @@ class Settings(BaseSettings):
             parsed = urlparse(self.base_url)
             return [parsed.hostname] if parsed.hostname else []
         return ["*"]
+
+    @property
+    def effective_totp_encryption_key(self) -> str:
+        if self.totp_encryption_key:
+            return self.totp_encryption_key
+        digest = hashlib.sha256(self.secret_key.encode()).digest()
+        return base64.urlsafe_b64encode(digest).decode()
 
 
 @lru_cache

@@ -23,6 +23,20 @@ from app.services.auth import (
     update_user_admin,
 )
 from app.services.email_reminders import send_digest_for_user
+from app.services.mfa import (
+    begin_totp_setup,
+    clear_failed_mfa,
+    confirm_totp_setup,
+    disable_totp,
+    mfa_is_rate_limited,
+    pending_secret,
+    provisioning_uri,
+    qr_code_data_uri,
+    record_failed_mfa,
+    regenerate_recovery_codes,
+    remaining_recovery_code_count,
+    verify_user_mfa_code,
+)
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 logger = logging.getLogger(__name__)
@@ -42,6 +56,9 @@ def _settings_context(user, **overrides) -> dict:
         "admin_success": None,
         "digest_test_error": None,
         "digest_test_success": None,
+        "security_error": None,
+        "security_success": None,
+        "recovery_code_count": remaining_recovery_code_count(user),
         "roles": ["user", "admin"],
         "digest_frequencies": ["daily", "weekly"],
         "email_configured": get_settings().email_configured,
@@ -80,10 +97,214 @@ def _current_settings_user(request: Request, db: Session) -> User:
     return db.get(User, request_user.id) or request_user
 
 
+def _client_host(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def _mfa_rate_limited(request: Request, user: User) -> bool:
+    settings = get_settings()
+    return mfa_is_rate_limited(
+        str(user.id),
+        _client_host(request),
+        settings.login_rate_limit_attempts,
+        settings.login_rate_limit_window_seconds,
+    )
+
+
+def _record_failed_settings_mfa(request: Request, user: User) -> None:
+    record_failed_mfa(str(user.id), _client_host(request))
+
+
+def _clear_failed_settings_mfa(request: Request, user: User) -> None:
+    clear_failed_mfa(str(user.id), _client_host(request))
+
+
+def _set_session_cookie(response, user: User) -> None:
+    settings = get_settings()
+    cookie = create_session_cookie(user.id, settings.secret_key, user.session_version)
+    response.set_cookie(
+        COOKIE_NAME,
+        cookie,
+        max_age=settings.session_max_age,
+        httponly=True,
+        secure=settings.effective_cookie_secure,
+        samesite="lax",
+        path="/",
+    )
+
+
 @router.get("", response_class=HTMLResponse)
 def settings_page(request: Request, db: Session = Depends(get_db)):
     user = _current_settings_user(request, db)
     return _render_settings(request, user, db)
+
+
+@router.post("/security/totp/setup", response_class=HTMLResponse)
+def settings_totp_setup_start(request: Request, db: Session = Depends(get_db)):
+    user = _current_settings_user(request, db)
+    if user.totp_enabled:
+        return _render_settings(
+            request,
+            user,
+            db,
+            security_error="Two-factor authentication is already on.",
+        )
+    secret, qr_data_uri = begin_totp_setup(db, user)
+    return request.app.state.templates.TemplateResponse(
+        request,
+        "settings/totp_setup.html",
+        {
+            "user": user,
+            "secret": secret,
+            "qr_data_uri": qr_data_uri,
+            "error": None,
+        },
+    )
+
+
+@router.get("/security/totp/setup", response_class=HTMLResponse)
+def settings_totp_setup_page(request: Request, db: Session = Depends(get_db)):
+    user = _current_settings_user(request, db)
+    secret = pending_secret(user)
+    if user.totp_enabled or not secret:
+        return RedirectResponse("/settings", status_code=303)
+    return request.app.state.templates.TemplateResponse(
+        request,
+        "settings/totp_setup.html",
+        {
+            "user": user,
+            "secret": secret,
+            "qr_data_uri": qr_code_data_uri(provisioning_uri(secret, user.username)),
+            "error": None,
+        },
+    )
+
+
+@router.post("/security/totp/confirm", response_class=HTMLResponse)
+async def settings_totp_setup_confirm(request: Request, db: Session = Depends(get_db)):
+    user = _current_settings_user(request, db)
+    form = await request.form()
+    code = form.get("code", "")
+    secret = pending_secret(user)
+    if not secret:
+        return _render_settings(
+            request,
+            user,
+            db,
+            security_error="Two-factor setup expired. Start again when you are ready.",
+        )
+    if _mfa_rate_limited(request, user):
+        return request.app.state.templates.TemplateResponse(
+            request,
+            "settings/totp_setup.html",
+            {
+                "user": user,
+                "secret": secret,
+                "qr_data_uri": qr_code_data_uri(provisioning_uri(secret, user.username)),
+                "error": "Too many attempts. Wait a few minutes before trying again.",
+            },
+            status_code=429,
+        )
+
+    recovery_codes = confirm_totp_setup(db, user, code)
+    if not recovery_codes:
+        _record_failed_settings_mfa(request, user)
+        return request.app.state.templates.TemplateResponse(
+            request,
+            "settings/totp_setup.html",
+            {
+                "user": user,
+                "secret": secret,
+                "qr_data_uri": qr_code_data_uri(provisioning_uri(secret, user.username)),
+                "error": "That code did not work. Check your authenticator app and try again.",
+            },
+            status_code=400,
+        )
+    _clear_failed_settings_mfa(request, user)
+    response = request.app.state.templates.TemplateResponse(
+        request,
+        "settings/totp_recovery_codes.html",
+        {"user": user, "recovery_codes": recovery_codes, "regenerated": False},
+    )
+    _set_session_cookie(response, user)
+    return response
+
+
+@router.post("/security/totp/disable", response_class=HTMLResponse)
+async def settings_totp_disable(request: Request, db: Session = Depends(get_db)):
+    user = _current_settings_user(request, db)
+    if not user.totp_enabled:
+        return _render_settings(
+            request,
+            user,
+            db,
+            security_error="Two-factor authentication is already off.",
+        )
+    form = await request.form()
+    code = form.get("code", "")
+    if _mfa_rate_limited(request, user):
+        return _render_settings(
+            request,
+            user,
+            db,
+            security_error="Too many attempts. Wait a few minutes before trying again.",
+        )
+    if not verify_user_mfa_code(db, user, code):
+        _record_failed_settings_mfa(request, user)
+        return _render_settings(
+            request,
+            user,
+            db,
+            security_error="Enter a current authenticator code or recovery code to turn this off.",
+        )
+    _clear_failed_settings_mfa(request, user)
+    disable_totp(db, user)
+    response = _render_settings(
+        request,
+        user,
+        db,
+        security_success="Two-factor authentication is off.",
+    )
+    _set_session_cookie(response, user)
+    return response
+
+
+@router.post("/security/totp/recovery-codes", response_class=HTMLResponse)
+async def settings_totp_recovery_codes(request: Request, db: Session = Depends(get_db)):
+    user = _current_settings_user(request, db)
+    if not user.totp_enabled:
+        return _render_settings(
+            request,
+            user,
+            db,
+            security_error="Turn on two-factor authentication before creating recovery codes.",
+        )
+    form = await request.form()
+    code = form.get("code", "")
+    if _mfa_rate_limited(request, user):
+        return _render_settings(
+            request,
+            user,
+            db,
+            security_error="Too many attempts. Wait a few minutes before trying again.",
+        )
+    if not verify_user_mfa_code(db, user, code):
+        _record_failed_settings_mfa(request, user)
+        return _render_settings(
+            request,
+            user,
+            db,
+            security_error="Enter a current authenticator code or recovery code to make new codes.",
+        )
+    _clear_failed_settings_mfa(request, user)
+    recovery_codes = regenerate_recovery_codes(db, user)
+    response = request.app.state.templates.TemplateResponse(
+        request,
+        "settings/totp_recovery_codes.html",
+        {"user": user, "recovery_codes": recovery_codes, "regenerated": True},
+    )
+    _set_session_cookie(response, user)
+    return response
 
 
 @router.post("/profile", response_class=HTMLResponse)
@@ -462,4 +683,77 @@ async def settings_user_status_update(
         user,
         db,
         admin_success=f"{target.username} {status}.",
+    )
+
+
+@router.post("/users/{user_id}/totp/disable", response_class=HTMLResponse)
+async def settings_user_totp_disable(
+    user_id: uuid.UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    user = _current_settings_user(request, db)
+    denied = _require_admin(user)
+    if denied:
+        return denied
+
+    target = _target_user_or_error(db, user_id)
+    if not target:
+        return _render_settings(request, user, db, admin_error="User not found.")
+    if target.id == user.id:
+        return _render_settings(
+            request,
+            user,
+            db,
+            admin_error="Use your Security settings to change your own two-factor setup.",
+        )
+    if not target.totp_enabled:
+        return _render_settings(
+            request,
+            user,
+            db,
+            admin_error=f"{target.username} does not have two-factor authentication on.",
+        )
+
+    form = await request.form()
+    admin_password = form.get("admin_password", "")
+    admin_mfa_code = form.get("admin_mfa_code", "")
+    if not user.verify_password(admin_password):
+        return _render_settings(
+            request,
+            user,
+            db,
+            admin_error=(
+                "Your password is required to turn off another user's "
+                "two-factor authentication."
+            ),
+        )
+    if user.totp_enabled:
+        if _mfa_rate_limited(request, user):
+            return _render_settings(
+                request,
+                user,
+                db,
+                admin_error="Too many attempts. Wait a few minutes before trying again.",
+            )
+        if not verify_user_mfa_code(db, user, admin_mfa_code):
+            _record_failed_settings_mfa(request, user)
+            return _render_settings(
+                request,
+                user,
+                db,
+                admin_error="Enter your current two-factor code before changing another user.",
+            )
+        _clear_failed_settings_mfa(request, user)
+
+    disable_totp(db, target)
+    logger.warning(
+        "Admin disabled user two-factor authentication",
+        extra={"admin_user_id": str(user.id), "target_user_id": str(target.id)},
+    )
+    return _render_settings(
+        request,
+        user,
+        db,
+        admin_success=f"Turned off two-factor authentication for {target.username}.",
     )

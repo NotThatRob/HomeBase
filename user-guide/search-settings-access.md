@@ -32,8 +32,26 @@ Depending on your role, settings may include:
 
 - Profile updates
 - Password changes
+- Two-factor authentication setup
 - Admin-created users
 - Notification timing preferences
+
+## Two-Factor Authentication
+
+Two-factor authentication is optional. When it is on, HomeBase asks for your
+password first, then asks for a code from an authenticator app.
+
+To turn it on:
+
+1. Open **Settings**.
+2. Find **Security**.
+3. Select **Set Up Two-Factor**.
+4. Scan the QR code with an authenticator app, or type the setup key manually.
+5. Enter the 6-digit code from the app.
+6. Save the recovery codes somewhere private.
+
+Recovery codes are for emergencies, such as losing your phone. Each code works
+once. HomeBase shows them only when they are created.
 
 ## User Roles
 

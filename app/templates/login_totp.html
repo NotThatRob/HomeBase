@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Sign In - HomeBase</title>
+    <link rel="stylesheet" href="/static/css/homebase.css">
+    <script src="/static/js/icons.js" defer></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-surface relative overflow-hidden">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary-container/30 blur-3xl float"></div>
+        <div class="absolute -bottom-48 -left-24 w-80 h-80 rounded-full bg-primary-container/20 blur-3xl float" style="animation-delay: -3s;"></div>
+    </div>
+
+    <div class="w-full max-w-sm mx-4 relative z-10">
+        <div class="text-center mb-10 animate-entrance">
+            <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-primary flex items-center justify-center shadow-xl shadow-primary/25">
+                <span class="material-symbols-outlined text-on-primary text-3xl" style="font-variation-settings: 'FILL' 1;">lock</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-on-surface font-headline tracking-tight">Check your app</h1>
+            <p class="text-sm text-on-surface-variant mt-1.5">Enter the code for {{ username }}.</p>
+        </div>
+
+        <div class="bg-surface-container-lowest rounded-2xl p-8 shadow-sm animate-entrance delay-1">
+            {% if error %}
+            <div class="mb-5 px-4 py-3 bg-red-50 text-red-700 text-sm rounded-xl flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">error</span>
+                {{ error }}
+            </div>
+            {% endif %}
+            <form method="post" action="/login/totp" class="space-y-5">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <label class="block">
+                    <span class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Authenticator or recovery code</span>
+                    <input type="text" id="code" name="code" required autofocus inputmode="numeric" autocomplete="one-time-code"
+                        class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-xl text-sm text-on-surface transition-all placeholder:text-outline-variant"
+                        placeholder="123456">
+                </label>
+                <button type="submit"
+                    class="w-full py-3 bg-gradient-to-br from-primary to-[#0b50d5] text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-lg">verified_user</span>
+                    Finish Sign In
+                </button>
+            </form>
+            <p class="mt-5 text-xs text-on-surface-variant leading-relaxed">
+                Open your authenticator app and enter the current 6-digit code. If you lost your device, enter one saved recovery code.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

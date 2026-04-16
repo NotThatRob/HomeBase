@@ -13,10 +13,13 @@ from app.logging_config import bind_user_id
 from app.models.user import User
 
 COOKIE_NAME = "homebase_session"
+MFA_PENDING_COOKIE_NAME = "homebase_pending_mfa"
 CSRF_COOKIE_NAME = "homebase_csrf"
 EXEMPT_PREFIXES = ("/login", "/health", "/ready", "/static", "/favicon.ico")
 MUTATING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 CSRF_SALT = "homebase-csrf"
+MFA_PENDING_SALT = "homebase-pending-mfa"
+MFA_PENDING_MAX_AGE = 300
 MAX_CSRF_FORM_BODY_SIZE = 12 * 1024 * 1024
 
 
@@ -25,10 +28,31 @@ def create_session_cookie(user_id: uuid.UUID, secret_key: str, session_version: 
     return serializer.dumps({"user_id": str(user_id), "session_version": session_version})
 
 
+def create_pending_mfa_cookie(
+    user_id: uuid.UUID,
+    secret_key: str,
+    session_version: int = 0,
+) -> str:
+    serializer = URLSafeTimedSerializer(secret_key, salt=MFA_PENDING_SALT)
+    return serializer.dumps({"user_id": str(user_id), "session_version": session_version})
+
+
 def load_session_cookie(cookie: str, secret_key: str, max_age: int) -> dict | None:
     serializer = URLSafeTimedSerializer(secret_key)
     try:
         data = serializer.loads(cookie, max_age=max_age)
+        return {
+            "user_id": uuid.UUID(data["user_id"]),
+            "session_version": int(data.get("session_version", 0)),
+        }
+    except (BadSignature, SignatureExpired, KeyError, ValueError):
+        return None
+
+
+def load_pending_mfa_cookie(cookie: str, secret_key: str) -> dict | None:
+    serializer = URLSafeTimedSerializer(secret_key, salt=MFA_PENDING_SALT)
+    try:
+        data = serializer.loads(cookie, max_age=MFA_PENDING_MAX_AGE)
         return {
             "user_id": uuid.UUID(data["user_id"]),
             "session_version": int(data.get("session_version", 0)),

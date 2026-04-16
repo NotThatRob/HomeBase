@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 import bcrypt
-from sqlalchemy import Boolean, String, func
+from sqlalchemy import JSON, Boolean, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -29,6 +29,12 @@ class User(Base):
     email_digest_time: Mapped[str] = mapped_column(
         String(5), default="08:00", server_default="08:00"
     )
+    totp_secret_encrypted: Mapped[str | None] = mapped_column(String(512), default=None)
+    totp_pending_secret_encrypted: Mapped[str | None] = mapped_column(String(512), default=None)
+    totp_pending_created_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    totp_enabled_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    recovery_codes: Mapped[list[dict] | None] = mapped_column(JSON, default=None)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     last_login: Mapped[datetime | None] = mapped_column(default=None)
 

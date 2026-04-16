@@ -39,6 +39,7 @@ from app.routes.search import router as search_router
 from app.routes.service_records import router as service_records_router
 from app.routes.settings import router as settings_router
 from app.routes.wizard import router as wizard_router
+from app.services.mfa import validate_totp_encryption_key
 from app.services.schema_guard import assert_database_schema_current
 from app.template_filters import compact_date, currency, file_size, long_date, short_date
 
@@ -76,6 +77,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             raise RuntimeError("Secure cookies must be enabled in production.")
         if not settings.effective_csrf_enabled:
             raise RuntimeError("CSRF protection must be enabled in production.")
+        if not settings.totp_encryption_key:
+            raise RuntimeError(
+                "TOTP_ENCRYPTION_KEY must be set before running in production. "
+                "This is a server-side deployment key; users set up MFA in Settings."
+            )
+        validate_totp_encryption_key(settings.totp_encryption_key)
 
     # Seed admin user if no users exist
     session = get_session_factory()()

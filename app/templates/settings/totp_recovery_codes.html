@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Recovery Codes - HomeBase{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl space-y-8">
+    <div>
+        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">Save your recovery codes</h1>
+        <p class="text-on-surface-variant">
+            These codes can get you back in if you lose your phone. HomeBase cannot show them again.
+        </p>
+    </div>
+
+    <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="rounded-xl bg-primary-container text-on-primary-container px-4 py-3 text-sm font-medium">
+            {% if regenerated %}
+            Your new recovery codes are ready. Your old recovery codes no longer work.
+            {% else %}
+            Two-factor authentication is now on.
+            {% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {% for code in recovery_codes %}
+            <code class="rounded-lg bg-surface-container-highest px-3 py-2 text-sm text-on-surface text-center">{{ code }}</code>
+            {% endfor %}
+        </div>
+
+        <div class="text-sm text-on-surface-variant space-y-2">
+            <p>Save these somewhere private, like a password manager.</p>
+            <p>Each recovery code works once in place of your authenticator code.</p>
+        </div>
+
+        <a href="/settings" class="signature-cta inline-flex text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
+            I Saved These Codes
+        </a>
+    </section>
+</div>
+{% endblock %}

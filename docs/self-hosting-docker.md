@@ -33,6 +33,7 @@ BASE_URL=https://your-homebase.example.com
 ALLOWED_HOSTS=your-homebase.example.com
 POSTGRES_PASSWORD=...
 SECRET_KEY=...
+TOTP_ENCRYPTION_KEY=...
 ADMIN_PASSWORD=...
 ```
 
@@ -41,6 +42,16 @@ Generate a secret key with:
 ```bash
 openssl rand -hex 32
 ```
+
+Generate the separate two-factor encryption key with:
+
+```bash
+python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
+```
+
+`TOTP_ENCRYPTION_KEY` is a server-side deployment key. It protects
+authenticator secrets stored by HomeBase. Users do not need this value; they
+set up two-factor authentication later from **Settings** in the web UI.
 
 Start HomeBase:
 
@@ -107,6 +118,7 @@ database -> private network only
 BASE_URL -> https://your-domain.example
 COOKIE_SECURE=true
 CSRF_ENABLED=true
+TOTP_ENCRYPTION_KEY=...
 ```
 
 Do not run production-like deployments over plain HTTP.
@@ -209,8 +221,9 @@ addresses; use the user ID and request logs for troubleshooting.
 ## Troubleshooting
 
 - **App exits on startup**: run `docker compose -f compose.prod.yaml logs app`.
-  Production startup refuses default `SECRET_KEY`, default `ADMIN_PASSWORD`,
-  non-HTTPS `BASE_URL`, disabled CSRF, and insecure cookies.
+  Production startup refuses default `SECRET_KEY`, missing
+  `TOTP_ENCRYPTION_KEY`, default `ADMIN_PASSWORD`, non-HTTPS `BASE_URL`,
+  disabled CSRF, and insecure cookies.
 - **Database is not ready**: the app waits for PostgreSQL before migrations.
   Check `docker compose -f compose.prod.yaml logs db` if the timeout is reached.
 - **Caddy cannot get a certificate**: confirm `HOMEBASE_DOMAIN` resolves to the

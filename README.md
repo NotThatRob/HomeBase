@@ -45,6 +45,7 @@ verify backups, and practice a restore.
 ## Features
 
 - Session-based authentication with admin auto-seeding on first run
+- Optional authenticator-app two-factor authentication with recovery codes
 - Settings page for profile updates, password changes, and admin-created users
 - Asset CRUD with vehicle-specific metadata (VIN, mileage, fuel type, insurance)
 - Component tagging (brakes, oil, filter, etc.) with category-based presets
@@ -407,6 +408,7 @@ deployment issues, use the
 
 - Uploaded files are stored under `UPLOAD_DIR`, but they are not mounted as public static files. Asset photos and documents are served through authenticated routes that enforce shared/personal asset visibility.
 - CSRF protection is enabled automatically outside local debug mode. Forms include hidden CSRF tokens, including HTMX forms.
+- TOTP secrets are encrypted with `TOTP_ENCRYPTION_KEY`, a server-side deployment key. Users set up two-factor authentication from Settings in the web UI.
 - Login attempts are rate-limited in process. For multi-worker deployments, move this counter to shared storage.
 - Put a request body limit in the reverse proxy as well as the app-level 10 MB upload limit. For Caddy, use a site-level `request_body` limit appropriate for the deployment.
 

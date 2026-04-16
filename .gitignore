@@ -199,6 +199,6 @@ CLAUDE.md
 AGENTS.md
 
 # Local test scratch space
-tests/
+/tests
 my_tests/
 /Github Issues

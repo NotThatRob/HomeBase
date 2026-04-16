@@ -76,6 +76,82 @@
         </form>
     </section>
 
+    <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm animate-fade-up delay-2">
+        <h2 class="text-lg font-bold font-headline text-on-surface mb-1">Security</h2>
+        <p class="text-sm text-on-surface-variant mb-5">
+            Two-factor authentication adds a second sign-in step using an authenticator app.
+        </p>
+
+        {% if security_error %}
+        <div class="mb-4 rounded-xl bg-error-container text-on-error-container px-4 py-3 text-sm font-medium">{{ security_error }}</div>
+        {% endif %}
+        {% if security_success %}
+        <div class="mb-4 rounded-xl bg-primary-container text-on-primary-container px-4 py-3 text-sm font-medium">{{ security_success }}</div>
+        {% endif %}
+
+        <div class="border border-outline-variant rounded-xl p-4">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h3 class="font-bold text-on-surface">Two-factor authentication</h3>
+                        {% if user.totp_enabled %}
+                        <span class="text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-primary-container text-on-primary-container">On</span>
+                        {% else %}
+                        <span class="text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-surface-container-highest text-on-surface-variant">Off</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-sm text-on-surface-variant mt-2">
+                        Use Google Authenticator, 1Password, Authy, or another authenticator app.
+                    </p>
+                    {% if user.totp_enabled %}
+                    <p class="text-xs text-on-surface-variant mt-2">
+                        You have {{ recovery_code_count }} unused recovery code{% if recovery_code_count != 1 %}s{% endif %}.
+                    </p>
+                    {% endif %}
+                </div>
+
+                {% if not user.totp_enabled %}
+                <form method="post" action="/settings/security/totp/setup">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
+                        Set Up Two-Factor
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if user.totp_enabled %}
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <form method="post" action="/settings/security/totp/recovery-codes" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <label class="block">
+                        <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Current Code</span>
+                        <input type="text" name="code" required autocomplete="one-time-code"
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40"
+                               placeholder="123456">
+                    </label>
+                    <button type="submit" class="text-sm font-semibold text-primary hover:underline">
+                        Make New Recovery Codes
+                    </button>
+                </form>
+
+                <form method="post" action="/settings/security/totp/disable" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <label class="block">
+                        <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Current Code</span>
+                        <input type="text" name="code" required autocomplete="one-time-code"
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40"
+                               placeholder="123456">
+                    </label>
+                    <button type="submit" class="text-sm font-semibold text-error hover:underline">
+                        Turn Off Two-Factor
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
     <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm animate-fade-up delay-3">
         <h2 class="text-lg font-bold font-headline text-on-surface mb-1">Notifications</h2>
         <p class="text-sm text-on-surface-variant mb-5">
@@ -174,6 +250,11 @@
                                 Disabled
                             </span>
                             {% endif %}
+                            {% if managed_user.totp_enabled %}
+                            <span class="text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-primary-container text-on-primary-container">
+                                2FA On
+                            </span>
+                            {% endif %}
                         </div>
                         <p class="text-sm text-on-surface-variant mt-1">
                             {{ managed_user.username }} · {{ managed_user.email }}
@@ -255,6 +336,29 @@
                         </button>
                     </div>
                 </form>
+
+                {% if managed_user.totp_enabled and managed_user.id != user.id %}
+                <form method="post" action="/settings/users/{{ managed_user.id }}/totp/disable" class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <label class="block">
+                        <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Your Password</span>
+                        <input type="password" name="admin_password" required
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                    </label>
+                    {% if user.totp_enabled %}
+                    <label class="block">
+                        <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Your 2FA Code</span>
+                        <input type="text" name="admin_mfa_code" required autocomplete="one-time-code"
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                    </label>
+                    {% endif %}
+                    <div class="flex items-end">
+                        <button type="submit" class="text-sm font-semibold text-error hover:underline py-3">
+                            Turn Off 2FA
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
