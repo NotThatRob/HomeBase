@@ -14,11 +14,11 @@
         <div class="rounded-xl bg-error-container text-on-error-container px-4 py-3 text-sm font-medium">{{ error }}</div>
         {% endif %}
 
-        <div class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
-            <div class="bg-white rounded-xl p-4">
+        <div class="flex flex-col md:flex-row gap-6 items-start">
+            <div class="bg-white rounded-xl p-3 mx-auto flex-shrink-0" style="width: 220px; max-width: 100%;">
                 <img src="{{ qr_data_uri }}" alt="QR code for authenticator setup" class="w-full h-auto">
             </div>
-            <div class="space-y-4">
+            <div class="space-y-4 flex-1 min-w-0">
                 <div>
                     <h2 class="text-lg font-bold text-on-surface mb-2">1. Open your authenticator app</h2>
                     <p class="text-sm text-on-surface-variant">

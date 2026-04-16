@@ -34,20 +34,20 @@
             {% endif %}
             <form method="post" action="/login" class="space-y-5">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
-                <div class="animate-entrance delay-2">
+                <div>
                     <label for="username" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Username</label>
-                    <input type="text" id="username" name="username" required autofocus
-                        class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-xl text-sm text-on-surface transition-all placeholder:text-outline-variant"
+                    <input type="text" id="username" name="username" required
+                        class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-xl text-sm text-on-surface transition-colors placeholder:text-outline-variant"
                         placeholder="Enter your username">
                 </div>
-                <div class="animate-entrance delay-2">
+                <div>
                     <label for="password" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Password</label>
                     <input type="password" id="password" name="password" required
-                        class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-xl text-sm text-on-surface transition-all placeholder:text-outline-variant"
+                        class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-xl text-sm text-on-surface transition-colors placeholder:text-outline-variant"
                         placeholder="Enter your password">
                 </div>
                 <button type="submit"
-                    class="w-full py-3 bg-gradient-to-br from-primary to-[#0b50d5] text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all text-sm animate-entrance delay-3 flex items-center justify-center gap-2">
+                    class="w-full py-3 bg-gradient-to-br from-primary to-[#0b50d5] text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity text-sm flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-lg">login</span>
                     Sign In
                 </button>
