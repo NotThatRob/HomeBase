@@ -1,6 +1,7 @@
 import os
 import uuid
 from datetime import date
+from pathlib import Path
 
 from fastapi import UploadFile
 from sqlalchemy import or_
@@ -28,6 +29,20 @@ ASSET_ALLOWED_FIELDS = {
 def _filter_allowed(data: dict, allowed: set) -> dict:
     """Return only the keys present in the allowed set."""
     return {k: v for k, v in data.items() if k in allowed}
+
+
+def _safe_upload_path(upload_dir: str, relative_path: str) -> str | None:
+    relative_path = relative_path.lstrip("/\\")
+    relative = Path(relative_path)
+    if relative.is_absolute() or ".." in relative.parts:
+        return None
+    root = Path(upload_dir).resolve()
+    candidate = (root / relative).resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        return None
+    return str(candidate)
 
 
 def list_assets(
@@ -150,14 +165,20 @@ async def save_photo(
     # Generate random filename to prevent XSS via crafted extensions
     safe_filename = f"{uuid.uuid4().hex}{ext}"
 
-    asset_dir = os.path.join(upload_dir, str(asset_id))
+    relative_dir = str(asset_id)
+    asset_dir = _safe_upload_path(upload_dir, relative_dir)
+    if not asset_dir:
+        raise ValueError("Unsafe upload path")
     os.makedirs(asset_dir, exist_ok=True)
 
-    file_path = os.path.join(asset_dir, safe_filename)
+    relative_file_path = f"{relative_dir}/{safe_filename}"
+    file_path = _safe_upload_path(upload_dir, relative_file_path)
+    if not file_path:
+        raise ValueError("Unsafe upload path")
     with open(file_path, "wb") as f:
         f.write(content)
 
-    return f"{asset_id}/{safe_filename}"
+    return relative_file_path
 
 
 def _extract_vehicle_fields(data: dict) -> dict:
