@@ -4,20 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - HomeBase</title>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('theme');
+                var prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = stored || (prefers ? 'dark' : 'light');
+                document.documentElement.classList.add(theme);
+            } catch (e) {
+                document.documentElement.classList.add('light');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="/static/css/homebase.css">
     <script src="/static/js/icons.js" defer></script>
 </head>
 <body class="min-h-screen flex items-center justify-center bg-surface relative overflow-hidden">
     <!-- Atmospheric background elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary-container/30 blur-3xl float"></div>
-        <div class="absolute -bottom-48 -left-24 w-80 h-80 rounded-full bg-primary-container/20 blur-3xl float" style="animation-delay: -3s;"></div>
+        <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary-container blur-3xl float" style="opacity: 0.3;"></div>
+        <div class="absolute -bottom-48 -left-24 w-80 h-80 rounded-full bg-primary-container blur-3xl float" style="opacity: 0.2; animation-delay: -3s;"></div>
     </div>
 
     <div class="w-full max-w-sm mx-4 relative z-10">
         <!-- Logo + title -->
         <div class="text-center mb-10 animate-entrance">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-primary flex items-center justify-center shadow-xl shadow-primary/25">
+            <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-primary flex items-center justify-center shadow-xl">
                 <span class="material-symbols-outlined text-on-primary text-3xl" style="font-variation-settings: 'FILL' 1;">home_storage</span>
             </div>
             <h1 class="text-3xl font-extrabold text-on-surface font-headline tracking-tight">HomeBase</h1>
@@ -27,7 +39,7 @@
         <!-- Login card -->
         <div class="bg-surface-container-lowest rounded-2xl p-8 shadow-sm animate-entrance delay-1">
             {% if error %}
-            <div class="mb-5 px-4 py-3 bg-red-50 text-red-700 text-sm rounded-xl flex items-center gap-2">
+            <div class="mb-5 px-4 py-3 bg-error-container text-on-error-container text-sm rounded-xl flex items-center gap-2">
                 <span class="material-symbols-outlined text-lg">error</span>
                 {{ error }}
             </div>
@@ -47,7 +59,7 @@
                         placeholder="Enter your password">
                 </div>
                 <button type="submit"
-                    class="w-full py-3 bg-gradient-to-br from-primary to-[#0b50d5] text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity text-sm flex items-center justify-center gap-2">
+                    class="w-full py-3 signature-cta text-on-primary font-bold rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-lg">login</span>
                     Sign In
                 </button>
@@ -55,7 +67,7 @@
         </div>
 
         <!-- Footer -->
-        <p class="text-center text-xs text-on-surface-variant/50 mt-8 animate-entrance delay-3">
+        <p class="text-center text-xs text-on-surface-variant mt-8 animate-entrance delay-3" style="opacity: 0.5;">
             HomeBase v0.2.0
         </p>
     </div>

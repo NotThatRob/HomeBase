@@ -10,7 +10,7 @@
 <!-- Header -->
 <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-up">
     <div>
-        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">
             Welcome back{% if user and user.display_name %}, {{ user.display_name.split()[0] }}{% endif %}
         </h1>
         <p class="text-on-surface-variant max-w-lg">Your household at a glance — spend, recent activity, and quick actions.</p>
@@ -18,9 +18,9 @@
 </div>
 
 <!-- Quick actions -->
-<div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-10 animate-fade-up delay-1">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-10 animate-fade-up delay-1">
     <a href="/assets/new"
-       class="signature-cta text-on-primary rounded-xl px-5 py-4 flex items-center justify-between gap-3 shadow-sm shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all">
+       class="signature-cta text-on-primary rounded-xl px-5 py-4 flex items-center justify-between gap-3 shadow-lg hover:opacity-90 active:scale-[0.98] transition-all">
         <span class="flex items-center gap-3">
             <span class="material-symbols-outlined">add</span>
             <span class="font-semibold font-headline text-sm">Add Asset</span>
@@ -28,7 +28,7 @@
         <span class="material-symbols-outlined text-base opacity-70">arrow_forward</span>
     </a>
     <a href="/fuel-logs/new"
-       class="bg-surface-container-low text-on-surface rounded-xl px-5 py-4 flex items-center justify-between gap-3 hover:bg-surface-container-high transition-all">
+       class="bg-surface-container-low text-on-surface rounded-xl px-5 py-4 flex items-center justify-between gap-3 hover:bg-surface-container-high active:scale-[0.98] transition-all">
         <span class="flex items-center gap-3">
             <span class="material-symbols-outlined text-primary">local_gas_station</span>
             <span class="font-semibold font-headline text-sm">Log Fuel</span>
@@ -36,7 +36,7 @@
         <span class="material-symbols-outlined text-base text-on-surface-variant">arrow_forward</span>
     </a>
     <a href="/assets"
-       class="bg-surface-container-low text-on-surface rounded-xl px-5 py-4 flex items-center justify-between gap-3 hover:bg-surface-container-high transition-all">
+       class="bg-surface-container-low text-on-surface rounded-xl px-5 py-4 flex items-center justify-between gap-3 hover:bg-surface-container-high active:scale-[0.98] transition-all">
         <span class="flex items-center gap-3">
             <span class="material-symbols-outlined text-primary">build_circle</span>
             <span class="font-semibold font-headline text-sm">Log Service</span>
@@ -44,7 +44,7 @@
         <span class="material-symbols-outlined text-base text-on-surface-variant">arrow_forward</span>
     </a>
     <a href="/assets"
-       class="bg-surface-container-low text-on-surface rounded-xl px-5 py-4 flex items-center justify-between gap-3 hover:bg-surface-container-high transition-all">
+       class="bg-surface-container-low text-on-surface rounded-xl px-5 py-4 flex items-center justify-between gap-3 hover:bg-surface-container-high active:scale-[0.98] transition-all">
         <span class="flex items-center gap-3">
             <span class="material-symbols-outlined text-primary">event_repeat</span>
             <span class="font-semibold font-headline text-sm">Add Task</span>
@@ -84,7 +84,7 @@
                           action="/assets/{{ task.asset_id }}/maintenance-tasks/{{ task.id }}/quick-complete">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                         <button type="submit"
-                                class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                class="text-xs font-bold text-primary hover:underline active:scale-[0.98] flex items-center gap-1 px-3 py-2 rounded-lg">
                             <span class="material-symbols-outlined text-sm">check_circle</span>
                             Mark Done
                         </button>
@@ -123,7 +123,7 @@
                           action="/assets/{{ task.asset_id }}/maintenance-tasks/{{ task.id }}/quick-complete">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                         <button type="submit"
-                                class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                class="text-xs font-bold text-primary hover:underline active:scale-[0.98] flex items-center gap-1 px-3 py-2 rounded-lg">
                             <span class="material-symbols-outlined text-sm">check_circle</span>
                             Mark Done
                         </button>

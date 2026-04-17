@@ -5,7 +5,7 @@
 {% block content %}
 <div class="max-w-4xl space-y-10">
     <div class="animate-fade-up">
-        <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">Settings</h1>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-on-surface tracking-tight font-headline mb-2">Settings</h1>
         <p class="text-on-surface-variant">Manage your account and household access.</p>
     </div>
 
@@ -25,12 +25,12 @@
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Display Name</span>
                 <input type="text" name="display_name" value="{{ user.display_name }}" required
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Email</span>
                 <input type="email" name="email" value="{{ user.email }}" required
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <div class="md:col-span-2">
                 <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
@@ -56,17 +56,17 @@
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Current Password</span>
                 <input type="password" name="current_password" required
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">New Password</span>
                 <input type="password" name="new_password" required minlength="8"
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Confirm Password</span>
                 <input type="password" name="confirm_password" required minlength="8"
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <div class="md:col-span-3">
                 <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
@@ -127,10 +127,10 @@
                     <label class="block">
                         <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Current Code</span>
                         <input type="text" name="code" required autocomplete="one-time-code"
-                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40"
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm"
                                placeholder="123456">
                     </label>
-                    <button type="submit" class="text-sm font-semibold text-primary hover:underline">
+                    <button type="submit" class="text-sm font-semibold text-primary hover:underline active:scale-[0.98] px-3 py-2 rounded-lg">
                         Make New Recovery Codes
                     </button>
                 </form>
@@ -140,10 +140,10 @@
                     <label class="block">
                         <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Current Code</span>
                         <input type="text" name="code" required autocomplete="one-time-code"
-                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40"
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm"
                                placeholder="123456">
                     </label>
-                    <button type="submit" class="text-sm font-semibold text-error hover:underline">
+                    <button type="submit" class="text-sm font-semibold text-error hover:underline active:scale-[0.98] px-3 py-2 rounded-lg">
                         Turn Off Two-Factor
                     </button>
                 </form>
@@ -173,13 +173,13 @@
             <label class="md:col-span-3 flex items-center gap-3">
                 <input type="checkbox" name="email_digest_enabled"
                        {% if user.email_digest_enabled %}checked{% endif %}
-                       class="rounded border-outline-variant text-primary focus:ring-primary/40">
+                       class="rounded border-outline-variant text-primary">
                 <span class="text-sm font-semibold text-on-surface">Send maintenance digest emails</span>
             </label>
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Frequency</span>
                 <select name="email_digest_frequency"
-                        class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                        class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
                     {% for frequency in digest_frequencies %}
                     <option value="{{ frequency }}" {% if user.email_digest_frequency == frequency %}selected{% endif %}>
                         {{ frequency | title }}
@@ -190,7 +190,7 @@
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Preferred Time</span>
                 <input type="time" name="email_digest_time" value="{{ user.email_digest_time }}"
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <div class="md:col-span-3">
                 <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">
@@ -209,7 +209,7 @@
         <form method="post" action="/settings/digest-test" class="mt-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
             <button type="submit"
-                    class="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+                    class="text-sm font-semibold text-primary hover:underline active:scale-[0.98] flex items-center gap-1 px-3 py-2 rounded-lg">
                 <span class="material-symbols-outlined text-base">outgoing_mail</span>
                 Send a test digest to my inbox
             </button>
@@ -257,7 +257,7 @@
                             {% endif %}
                         </div>
                         <p class="text-sm text-on-surface-variant mt-1">
-                            {{ managed_user.username }} · {{ managed_user.email }}
+                            {{ managed_user.username }} · <span style="overflow-wrap: anywhere">{{ managed_user.email }}</span>
                         </p>
                         <p class="text-xs text-on-surface-variant mt-1">
                             Created {{ managed_user.created_at | short_date }}
@@ -275,7 +275,7 @@
                         <input type="hidden" name="action" value="disable">
                         <button type="submit"
                                 {% if managed_user.id == user.id %}disabled{% endif %}
-                                class="text-sm font-semibold text-error hover:underline disabled:text-on-surface-variant disabled:no-underline disabled:cursor-not-allowed">
+                                class="text-sm font-semibold text-error hover:underline active:scale-[0.98] px-3 py-2 rounded-lg disabled:text-on-surface-variant disabled:no-underline disabled:cursor-not-allowed">
                             Disable
                         </button>
                         {% else %}
@@ -294,12 +294,12 @@
                     <label class="block">
                         <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Display Name</span>
                         <input type="text" name="display_name" value="{{ managed_user.display_name }}" required
-                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
                     </label>
                     <label class="block">
                         <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Email</span>
                         <input type="email" name="email" value="{{ managed_user.email }}" required
-                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
                     </label>
                     <label class="block">
                         <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Role</span>
@@ -309,7 +309,7 @@
                                class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm text-on-surface-variant">
                         {% else %}
                         <select name="role"
-                                class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                                class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
                             {% for role in roles %}
                             <option value="{{ role }}" {% if managed_user.role == role %}selected{% endif %}>{{ role | title }}</option>
                             {% endfor %}
@@ -328,7 +328,7 @@
                     <label class="block">
                         <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Temporary Password</span>
                         <input type="password" name="password" required minlength="8"
-                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
                     </label>
                     <div class="flex items-end">
                         <button type="submit" class="text-sm font-semibold text-primary hover:underline py-3">
@@ -343,17 +343,17 @@
                     <label class="block">
                         <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Your Password</span>
                         <input type="password" name="admin_password" required
-                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
                     </label>
                     {% if user.totp_enabled %}
                     <label class="block">
                         <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Your 2FA Code</span>
                         <input type="text" name="admin_mfa_code" required autocomplete="one-time-code"
-                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                               class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
                     </label>
                     {% endif %}
                     <div class="flex items-end">
-                        <button type="submit" class="text-sm font-semibold text-error hover:underline py-3">
+                        <button type="submit" class="text-sm font-semibold text-error hover:underline active:scale-[0.98] px-3 py-2 rounded-lg">
                             Turn Off 2FA
                         </button>
                     </div>
@@ -371,22 +371,22 @@
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Username</span>
                 <input type="text" name="username" required
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Display Name</span>
                 <input type="text" name="display_name" required
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Email</span>
                 <input type="email" name="email" required
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <label class="block">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Role</span>
                 <select name="role"
-                        class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                        class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
                     {% for role in roles %}
                     <option value="{{ role }}" {% if role == "user" %}selected{% endif %}>{{ role | title }}</option>
                     {% endfor %}
@@ -395,7 +395,7 @@
             <label class="block md:col-span-2">
                 <span class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Temporary Password</span>
                 <input type="password" name="password" required minlength="8"
-                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/40">
+                       class="mt-2 w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm">
             </label>
             <div class="md:col-span-2">
                 <button type="submit" class="signature-cta text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 transition-all">

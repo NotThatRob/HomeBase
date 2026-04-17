@@ -279,6 +279,15 @@
     animation-delay: 360ms;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .animate-entrance,
+    .animate-fade-up,
+    .animate-fade-in,
+    .animate-scale-in {
+      animation: none;
+    }
+  }
+
   .mobile-nav-backdrop {
     opacity: 0;
     pointer-events: none;

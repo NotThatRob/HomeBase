@@ -20,13 +20,13 @@
             {% endif %}
         </div>
 
-        <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <p class="text-sm text-on-surface-variant">
-                Click a code to copy it, or copy them all at once.
+                Tap a code to copy it, or copy them all at once.
             </p>
             <button type="button"
                     id="copy-all-recovery-codes"
-                    class="signature-cta inline-flex items-center gap-2 text-on-primary font-bold py-2 px-4 rounded-xl hover:opacity-90 transition-all text-sm">
+                    class="signature-cta w-full sm:w-auto inline-flex items-center justify-center gap-2 text-on-primary font-bold py-3 px-5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all text-sm">
                 Copy all codes
             </button>
         </div>
@@ -35,14 +35,15 @@
             {% for code in recovery_codes %}
             <button type="button"
                     data-recovery-code="{{ code }}"
-                    class="select-all rounded-lg bg-surface-container-highest px-3 py-2 text-sm text-on-surface text-center font-mono hover:bg-surface-container-high transition-colors cursor-pointer">
+                    style="user-select: all"
+                    class="rounded-lg bg-surface-container-highest px-3 py-3 text-sm text-on-surface text-center font-mono hover:bg-surface-container-high active:bg-surface-container-high focus:ring-2 transition-colors cursor-pointer">
                 {{ code }}
             </button>
             {% endfor %}
         </div>
 
         <p id="recovery-codes-status"
-           class="text-sm text-primary font-medium h-5 m-0" aria-live="polite"></p>
+           class="text-sm text-primary font-medium" aria-live="polite">&#160;</p>
 
         <div class="text-sm text-on-surface-variant space-y-2">
             <p>Save these somewhere private, like a password manager.</p>
@@ -68,7 +69,7 @@
         if (!status) return;
         status.textContent = message;
         clearTimeout(statusTimer);
-        statusTimer = setTimeout(() => { status.textContent = ""; }, 2000);
+        statusTimer = setTimeout(() => { status.textContent = "\u00A0"; }, 2000);
     }
 
     async function copy(text, successMessage) {
