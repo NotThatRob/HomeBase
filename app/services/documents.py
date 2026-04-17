@@ -144,14 +144,21 @@ async def save_document(
 
     # Random filename prevents user-controlled paths and crafted-extension XSS.
     safe_filename = f"{uuid.uuid4().hex}{ext}"
-    asset_dir = os.path.join(upload_dir, "documents", str(asset_id))
+    relative_dir = f"documents/{asset_id}"
+    asset_dir = _safe_upload_path(upload_dir, relative_dir)
+    if not asset_dir:
+        raise ValueError("Unsafe upload path")
     os.makedirs(asset_dir, exist_ok=True)
-    abs_path = os.path.join(asset_dir, safe_filename)
+
+    relative_file_path = f"{relative_dir}/{safe_filename}"
+    abs_path = _safe_upload_path(upload_dir, relative_file_path)
+    if not abs_path:
+        raise ValueError("Unsafe upload path")
     with open(abs_path, "wb") as f:
         f.write(content)
 
     return {
-        "file_path": f"documents/{asset_id}/{safe_filename}",
+        "file_path": relative_file_path,
         "file_name": original,
         "mime_type": mime_type,
         "file_size": len(content),
