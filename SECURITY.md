@@ -2,8 +2,10 @@
 
 ## Supported Versions
 
-HomeBase is a self-hostable beta. Only the latest `main` branch is supported for
-security updates. There are no back-ported patches to older commits.
+HomeBase is no longer actively developed. Security reports are still welcome
+and will be looked at when possible, but there is no guaranteed response time.
+Any fixes land on the latest `main` branch only; there are no back-ported
+patches to older commits.
 
 ## Reporting a Vulnerability
 
@@ -19,16 +21,6 @@ Instead, report privately via **GitHub Security Advisories**:
 
 GitHub will route the advisory to the maintainer privately. A public advisory
 will be published once a fix is available.
-
-## What to Expect
-
-- **Acknowledgment**: within 7 days of submission.
-- **Triage**: a severity assessment and next-steps note, typically within 14
-  days.
-- **Fix timeline**: depends on severity and complexity; critical issues are
-  prioritized.
-- **Credit**: reporters are credited in the public advisory unless they ask to
-  remain anonymous.
 
 ## Scope
 
