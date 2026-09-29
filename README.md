@@ -4,6 +4,10 @@ Personal asset management system for tracking everything you own — specs, docu
 
 ## Project Status
 
+> **HomeBase is no longer under active development.** The app works, but I'm
+> not building new features. Contributions and forks are very welcome. See
+> [Contributing](#contributing) for known issues and ideas.
+
 HomeBase is a self-hostable beta. It is intended for careful household use in
 isolated or personally managed environments. Before relying on it for important
 records, deploy with the Docker + Caddy guide, change all production secrets,
@@ -29,6 +33,7 @@ verify backups, and practice a restore.
 - [Manual Python deploy order](#manual-python-deploy-order)
 - [Manual Setup Troubleshooting](#manual-setup-troubleshooting)
 - [Security Notes](#security-notes)
+- [Contributing](#contributing)
 - [Reporting a Vulnerability](#reporting-a-vulnerability)
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
@@ -59,10 +64,12 @@ verify backups, and practice a restore.
   delivery stays disabled until configured
 - Dashboard with Chart.js financial overview and recent activity feed
 - Reports tab with canned cost/service views, per-entity CSV exports,
-  full JSON backup, and chart PNG exports
+  a JSON data export, and chart PNG exports (the JSON export is not a
+  restorable backup; see [Contributing](#contributing))
 - Global search across assets, service records, and documents
 - First-run wizard for guided onboarding
-- Shared vs. personal asset visibility
+- Shared vs. personal asset visibility (personal can't be selected in the UI
+  yet; see [Contributing](#contributing))
 
 ## User Guide
 
@@ -416,12 +423,85 @@ deployment issues, use the
 - Login attempts are rate-limited in process. For multi-worker deployments, move this counter to shared storage.
 - Put a request body limit in the reverse proxy as well as the app-level 10 MB upload limit. For Caddy, use a site-level `request_body` limit appropriate for the deployment.
 
+## Contributing
+
+HomeBase isn't actively developed anymore, but it's in decent shape and there's
+plenty of useful work left. There are two good ways to help:
+
+- **Open a pull request.** Anything from a one-line fix to a whole feature is
+  welcome. I review pull requests when I can, so it may take a while.
+- **Fork it and carry it forward.** If you want to take HomeBase in your own
+  direction, or need changes faster than I can review them, a fork is just as
+  welcome. The [MIT license](LICENSE) allows it.
+
+### How to contribute
+
+1. Fork the repo and create a branch from `main`.
+2. Follow [Manual Development Setup](#manual-development-setup), then load demo
+   data with `python -m app.cli.seed_dev --reset`.
+3. Make sure `ruff check app/` passes.
+4. Open a pull request that explains what changed and how you tested it.
+
+AI-assisted contributions are fine. Please read the [AI Policy](AI_POLICY.md).
+Report security issues privately as described in [SECURITY.md](SECURITY.md).
+
+### What needs doing
+
+As of September 2026. Pick anything that interests you.
+
+**Bugs**
+
+- [ ] **Assets can't be made personal.** Personal assets are hidden correctly
+  everywhere, but the asset form has no visibility field and `visibility` isn't
+  in `ASSET_ALLOWED_FIELDS` (`app/services/assets.py`), so every asset is saved
+  as shared.
+- [ ] **Retired assets keep showing overdue tasks** on the dashboard, the
+  Maintenance page, and in digest emails (`dashboard_tasks` and
+  `list_tasks_for_user` in `app/services/maintenance_tasks.py`).
+- [ ] **Disabled users still get digest emails.** The recipient queries in
+  `app/services/email_reminders.py` don't check `is_active`.
+- [ ] **Usage-based tasks only work for vehicles.** Due status only reads vehicle
+  mileage, so a task measured in, say, HVAC hours never comes due.
+- [ ] **Some bad input causes a 500 error instead of a form error:** non-numeric
+  mileage when completing a task, and a blank title when editing a document.
+  Document `doc_type` isn't validated either.
+
+**Testing and tooling**
+
+- [ ] **No tests in the repo.** `/tests` is listed in `.gitignore`, so the
+  `pytest` steps above find nothing. Removing that entry and adding a test
+  suite would be the most valuable contribution.
+- [ ] **No CI.** A GitHub Actions workflow that runs `ruff` and `pytest` against
+  PostgreSQL would catch regressions.
+- [ ] Remove the unused `app/jobs/send_maintenance_digests.py`, which
+  `app/cli/send_digests.py` replaced.
+
+**Docs that promise more than the code does**
+
+- [ ] The Reports page labels its JSON download "Full backup", but it leaves
+  out vehicle details, components, users, photos, and uploaded files, and it
+  can't be imported. Either relabel it as an export, or make it complete and
+  add a restore.
+- [ ] `SECURITY.md` says the 10 MB upload limit is enforced at the proxy, but
+  `deploy/caddy/Caddyfile` has no `request_body` limit.
+- [ ] Email digests don't run on their own in the Docker deployment because
+  `compose.prod.yaml` has no scheduler.
+
+**Ideas**
+
+- [ ] Un-retire an asset, and record a reason when retiring one.
+- [ ] Metric units (liters, kilometers) and currencies other than USD.
+- [ ] Search across maintenance tasks, fuel logs, and vehicle VIN/plate.
+- [ ] Self-service password reset.
+- [ ] Protect CSV exports against spreadsheet formula injection.
+- [ ] Shared-storage login rate limiting for multi-worker deployments.
+
 ## Reporting a Vulnerability
 
 Please do not open a public GitHub issue for security reports. Use **GitHub
 Security Advisories** (Security → Report a vulnerability) so a fix can land
-before the issue is public. See [SECURITY.md](SECURITY.md) for scope,
-expected response times, and what's in and out of scope.
+before the issue is public. See [SECURITY.md](SECURITY.md) for what's in and
+out of scope.
 
 ## Acknowledgments
 
